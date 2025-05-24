@@ -12,6 +12,7 @@ import React from 'react';
     import ProfilGuruStaffPage from '@/pages/ProfilGuruStaffPage';
     import { Toaster } from '@/components/ui/toaster';
     import { ThemeProvider } from '@/components/ThemeProvider';
+    import PostDetailPage from '@/pages/PostDetailPage';
 
     function App() {
       return (
@@ -29,6 +30,7 @@ import React from 'react';
                   <Route path="/profil/visi-misi" element={<ProfilVisiMisiPage />} />
                   <Route path="/profil/tentang-kami" element={<ProfilTentangKamiPage />} />
                   <Route path="/profil/guru-staff" element={<ProfilGuruStaffPage />} />
+                  <Route path="/postingan/:id" element={<PostDetailPage />} />
                 </Routes>
               </main>
               <Footer />

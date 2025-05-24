@@ -80,13 +80,7 @@ import React, { useState, useEffect } from 'react';
             </p>
           </motion.section>
 
-          {isAdmin && (
-            <motion.div className="text-right mb-8" variants={fadeInUp}>
-              <Button onClick={handleAddJurusan} className="bg-green-500 hover:bg-green-600 text-white">
-                <PlusCircle className="mr-2 h-5 w-5" /> Tambah Jurusan Baru
-              </Button>
-            </motion.div>
-          )}
+
 
           <motion.div 
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -125,16 +119,7 @@ import React, { useState, useEffect } from 'react';
                       {jurusan.description}
                     </CardDescription>
                   </CardContent>
-                  {isAdmin && (
-                    <div className="p-4 border-t dark:border-gray-700 mt-auto bg-gray-50 dark:bg-gray-800/30 flex justify-end space-x-2">
-                       <Button variant="outline" size="sm" onClick={() => handleEditJurusan(jurusan.id)} className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/30">
-                        <Edit className="mr-1 h-4 w-4" /> Edit
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteJurusan(jurusan.id)}>
-                        <Trash2 className="mr-1 h-4 w-4" /> Hapus
-                      </Button>
-                    </div>
-                  )}
+                 
                 </Card>
               </motion.div>
               );

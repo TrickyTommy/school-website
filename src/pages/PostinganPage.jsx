@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
     import { Button } from '@/components/ui/button';
     import { Newspaper, Image as ImageIcon, Video, PlusCircle, Edit, Trash2, CalendarDays, UserCircle, Tag, AlertTriangle } from 'lucide-react';
     import { useToast } from '@/components/ui/use-toast';
+    import { useNavigate } from 'react-router-dom';
 
     const initialPostinganData = [
       { id: 'post1', title: 'Kegiatan Class Meeting Akhir Semester', type: 'berita', content: 'Siswa-siswi SMK Budi Mulia Karawang mengikuti berbagai lomba dalam class meeting...', image: 'Siswa bermain basket saat class meeting', videoUrl: null, date: '2025-05-20', author: 'Admin Sekolah', category: 'Kegiatan Sekolah' },
@@ -13,6 +14,7 @@ import React, { useState, useEffect } from 'react';
     ];
     
     const PostinganPage = () => {
+      const navigate = useNavigate();
       const [postinganList, setPostinganList] = useState([]);
       const [filter, setFilter] = useState('semua');
       const { toast } = useToast();
@@ -64,6 +66,10 @@ import React, { useState, useEffect } from 'react';
         });
       };
 
+      const handlePostClick = (postId) => {
+        navigate(`/postingan/${postId}`);
+      };
+
       const getPostIcon = (type) => {
         if (type === 'berita') return <Newspaper className="w-5 h-5 mr-2 text-blue-500" />;
         if (type === 'foto') return <ImageIcon className="w-5 h-5 mr-2 text-green-500" />;
@@ -98,11 +104,7 @@ import React, { useState, useEffect } from 'react';
                 </Button>
               ))}
             </div>
-            {isAdmin && (
-              <Button onClick={handleAddPostingan} className="bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto">
-                <PlusCircle className="mr-2 h-5 w-5" /> Tambah Postingan
-              </Button>
-            )}
+           
           </div>
           
           {filteredPostingan.length === 0 ? (
@@ -122,16 +124,25 @@ import React, { useState, useEffect } from 'react';
             >
               {filteredPostingan.map(post => (
                 <motion.div key={post.id} variants={fadeInUp} className="h-full">
-                  <Card className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60">
-                    {post.image && (
+                  <Card 
+                    className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60 cursor-pointer"
+                    onClick={() => handlePostClick(post.id)}
+                  >
+                    {(post.image || post.videoUrl) && (
                       <div className="relative h-56 w-full overflow-hidden">
-                        <img   
-                          alt={post.image} 
-                          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          src="https://images.unsplash.com/photo-1675023112817-52b789fd2ef0" />
-                        {post.type === 'video' && post.videoUrl && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <Video className="w-16 h-16 text-white opacity-80" />
+                        {post.image ? (
+                          <img   
+                            alt={post.title} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            src={post.image}
+                          />
+                        ) : post.videoUrl && (
+                          <div className="w-full h-full">
+                            <video 
+                              src={post.videoUrl} 
+                              controls
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         )}
                       </div>
@@ -166,16 +177,7 @@ import React, { useState, useEffect } from 'react';
                         <p className="flex items-center"><Tag className="w-3 h-3 mr-1.5" /> Kategori: {post.category}</p>
                       </div>
                     </CardContent>
-                    {isAdmin && (
-                      <div className="p-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 flex justify-end space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEditPostingan(post.id)} className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/30">
-                          <Edit className="mr-1 h-3 w-3" /> Edit
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeletePostingan(post.id)}>
-                          <Trash2 className="mr-1 h-3 w-3" /> Hapus
-                        </Button>
-                      </div>
-                    )}
+                   
                   </Card>
                 </motion.div>
               ))}
