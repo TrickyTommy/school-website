@@ -13,11 +13,11 @@
                 <p className="text-xl font-semibold text-white mb-4">SMK Budi Mulia Karawang</p>
                 <p className="text-sm mb-2 flex items-start">
                   <MapPin className="w-5 h-5 mr-2 mt-1 text-purple-400 flex-shrink-0" />
-                  Jl. Contoh Alamat No. 123, Karawang, Jawa Barat, Indonesia
+                  Jl. Ciherang, Wadas, Telukjambe Timur, Karawang, Jawa Barat 41361, Indonesia
                 </p>
                 <p className="text-sm mb-2 flex items-center">
                   <Phone className="w-4 h-4 mr-2 text-purple-400" />
-                  (0267) 123-4567
+                  (0267) 865-8659
                 </p>
                 <p className="text-sm flex items-center">
                   <Mail className="w-4 h-4 mr-2 text-purple-400" />
@@ -38,7 +38,7 @@
               <div>
                 <p className="text-lg font-semibold text-white mb-4">Informasi</p>
                 <ul className="space-y-2">
-                  <li><a href="#" className="hover:text-purple-400 transition-colors">Visi & Misi</a></li>
+                  <li><a href="/profil/visi-misi" className="hover:text-purple-400 transition-colors">Visi & Misi</a></li>
                   <li><a href="#" className="hover:text-purple-400 transition-colors">Sejarah Sekolah</a></li>
                   <li><a href="#" className="hover:text-purple-400 transition-colors">Fasilitas</a></li>
                   <li><a href="#" className="hover:text-purple-400 transition-colors">Ekstrakurikuler</a></li>

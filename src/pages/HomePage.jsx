@@ -1,4 +1,3 @@
-import React from 'react';
     import { motion } from 'framer-motion';
     import { Button } from '@/components/ui/button';
     import { Link } from 'react-router-dom';
@@ -37,50 +36,56 @@ import React from 'react';
 
       return (
         <div className="space-y-16">
-          {/* Hero Section */}
-          <motion.section 
-            className="relative py-20 md:py-32 rounded-xl overflow-hidden shadow-2xl bg-gradient-to-tr from-purple-600 via-indigo-700 to-blue-600 text-white"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="absolute inset-0 opacity-20">
-              <img  alt="Gedung sekolah SMK Budi Mulia Karawang" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1632466722833-568a49d7b1f7" />
-            </div>
-            <div className="container mx-auto px-4 text-center relative z-10">
-              <motion.h1 
-                className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight"
-                initial={{ y: -50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.7, delay: 0.2 }}
-              >
-                Selamat Datang
-                <span className="block">SMK Budi Mulia</span>
-                <span className="block">Karawang</span>
-              </motion.h1>
-              <motion.p 
-                className="text-lg md:text-xl mb-10 max-w-3xl mx-auto text-purple-100"
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.7, delay: 0.4 }}
-              >
-                Mencetak Generasi Unggul, Kreatif, dan Berkarakter untuk Masa Depan Gemilang.
-              </motion.p>
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <Button asChild size="lg" className="bg-white text-indigo-600 hover:bg-purple-100 shadow-lg transition-transform hover:scale-105">
-                  <Link to="/jurusan">
-                    Lihat Jurusan Kami <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-              </motion.div>
-            </div>
-          </motion.section>
+                <motion.section 
+                className="relative py-20 md:py-32 rounded-xl overflow-hidden shadow-2xl bg-gradient-to-tr from-purple-600 via-indigo-700 to-blue-600 text-white"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                >
+                <div className="absolute inset-0 opacity-20">
+                  <img  alt="Gedung sekolah SMK Budi Mulia Karawang" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1632466722833-568a49d7b1f7" />
+                </div>
+                <div className="container mx-auto px-4 text-center relative z-10">
+                  <motion.h1 
+                  className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight"
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.7, delay: 0.2 }}
+                  >
+                  Selamat Datang
+                  <span className="block">SMK Budi Mulia</span>
+                  <span className="block">Karawang</span>
+                  </motion.h1>
+                  <motion.p 
+                  className="text-lg md:text-xl mb-10 max-w-3xl mx-auto text-purple-100"
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.7, delay: 0.4 }}
+                  >
+                  <div className="flex justify-center mb-4">
+                    <img 
+                    alt="SMK Budi Mulia Karawang Logo" 
+                    className="h-20 w-20 rounded-full border-2 border-white shadow-md" 
+                    src="/logo_smk.png" 
+                    />
+                  </div>
+                  Mencetak Generasi Unggul, Kreatif, dan Berkarakter untuk Masa Depan Gemilang.
+                  </motion.p>
+                    <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      <Button asChild size="lg" className="bg-white text-indigo-600 hover:bg-purple-100 shadow-lg transition-transform hover:scale-105">
+                        <Link to="/jurusan">
+                          Lihat Jurusan Kami <ArrowRight className="ml-2 h-5 w-5" />
+                        </Link>
+                      </Button>
+                    </motion.div>
+                  </div>
+                </motion.section>
 
-          {/* Tentang Kami Section */}
+                {/* Tentang Kami Section */}
           <motion.section className="py-12" variants={staggerContainer} initial="initial" animate="animate">
             <div className="text-center mb-12">
               <motion.h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4" variants={fadeInUp}>

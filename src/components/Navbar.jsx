@@ -122,7 +122,7 @@ import React, { useState } from 'react';
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-20">
               <Link to="/" className="flex items-center space-x-2 text-white">
-                <img  alt="SMK Budi Mulia Karawang Logo" className="h-10 w-10 rounded-full border-2 border-white shadow-md" src="https://images.unsplash.com/photo-1685722624202-c84f60443677" />
+                <img  alt="SMK Budi Mulia Karawang Logo" className="h-10 w-10 rounded-full border-2 border-white shadow-md" src="/logo_smk.png" />
                 <span className="text-2xl font-bold tracking-tight">SMK Budi Mulia Karawang</span>
               </Link>
 
