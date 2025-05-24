@@ -49,21 +49,7 @@ import React, { useState, useEffect } from 'react';
         }
       };
 
-      const handleAddJurusan = () => {
-        toast({ title: "Info", description: "Fitur tambah jurusan akan tersedia di halaman Admin." });
-      };
-
-      const handleEditJurusan = (id) => {
-        toast({ title: "Info", description: `Fitur edit jurusan (ID: ${id}) akan tersedia di halaman Admin.` });
-      };
-
-      const handleDeleteJurusan = (id) => {
-         toast({
-          variant: "destructive",
-          title: "Konfirmasi Hapus",
-          description: `Fitur hapus jurusan (ID: ${id}) akan tersedia di halaman Admin.`,
-        });
-      };
+     
 
 
       return (
