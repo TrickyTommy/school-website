@@ -35,12 +35,16 @@ export default function TeacherStaffManager() {
     try {
       setIsLoading(true);
       const result = await guruStaffAPI.getAll();
-      if (result.status === 'success') {
+      console.log('Loaded members:', result); // Debug log
+
+      if (result.status === 'success' && Array.isArray(result.data)) {
         setMembers(result.data);
+        console.log('Members set:', result.data); // Debug log
       } else {
-        throw new Error(result.message || 'Failed to load data');
+        throw new Error(result.message || 'Data format invalid');
       }
     } catch (error) {
+      console.error('Load error:', error); // Debug log
       toast({
         title: "Error",
         description: error.message || "Gagal memuat data guru & staff",
@@ -76,7 +80,7 @@ export default function TeacherStaffManager() {
 
   const handleSubmit = async () => {
     try {
-      if (!formData.name || !formData.email) {
+      if (!formData.name || !formData.email || !formData.role) {
         toast({
           title: "Validation Error",
           description: "Harap isi semua field yang wajib",
@@ -85,8 +89,34 @@ export default function TeacherStaffManager() {
         return;
       }
 
+      // Add expertise validation for vice principal
+      if (formData.role === 'vice_principal' && !formData.expertise) {
+        toast({
+          title: "Validation Error",
+          description: "Harap pilih bidang untuk Wakil Kepala Sekolah",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const submitData = {
+        ...formData,
+        id: editingMember?.id,
+        expertise: formData.role === 'vice_principal' ? 
+          // Map expertise values to proper display names
+          {
+            'kurikulum': 'Kurikulum',
+            'kesiswaan': 'Kesiswaan',
+            'sarana': 'Sarana & Prasarana',
+            'humas': 'Hubungan Masyarakat',
+            'bendahara': 'Bendahara'
+          }[formData.expertise] || formData.expertise 
+          : formData.expertise,
+        type: formData.role === 'teacher' ? 'teacher' : formData.type
+      };
+
       const action = editingMember ? guruStaffAPI.update : guruStaffAPI.create;
-      const result = await action(formData);
+      const result = await action(submitData);
 
       if (result.status === 'success') {
         await loadMembers();
@@ -100,6 +130,7 @@ export default function TeacherStaffManager() {
         throw new Error(result.message);
       }
     } catch (error) {
+      console.error('Submit error:', error);
       toast({
         title: "Error",
         description: error.message || "Gagal menyimpan data",
@@ -152,6 +183,30 @@ export default function TeacherStaffManager() {
     return `data:image/jpeg;base64,${image}`;
   };
 
+  const getDisplayTitle = (member) => {
+    switch (member.role) {
+      case 'principal':
+        return 'Kepala Sekolah';
+      case 'vice_principal':
+        return `Wakil Kepala Sekolah Bidang ${member.expertise || ''}`;
+      case 'program_head':
+        return `Kepala Program ${member.expertise || ''}`;
+      case 'teacher':
+        return member.subject || 'Guru';
+      case 'staff':
+        return member.position || 'Staff';  
+      default:
+        return member.position || member.role;
+    }
+  };
+
+  const groupLeadershipByRole = (members) => {
+    const principal = members.filter(m => m.role === 'principal');
+    const viceprincipals = members.filter(m => m.role === 'vice_principal');
+    const programHeads = members.filter(m => m.role === 'program_head');
+    return { principal, viceprincipals, programHeads };
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -186,6 +241,7 @@ export default function TeacherStaffManager() {
                 >
                   <option value="principal">Kepala Sekolah</option>
                   <option value="vice_principal">Wakil Kepala Sekolah</option>
+                  <option value="program_head">Kepala Program</option>
                   <option value="teacher">Guru</option>
                   <option value="staff">Staff</option>
                 </select>
@@ -211,7 +267,7 @@ export default function TeacherStaffManager() {
               {formData.type === 'teacher' ? (
                 <>
                   <div className="space-y-2">
-                    <Label>Subject</Label>
+                    <Label>Mata Pelajaran </Label>
                     <Input
                       value={formData.subject}
                       onChange={(e) => setFormData({...formData, subject: e.target.value})}
@@ -240,13 +296,31 @@ export default function TeacherStaffManager() {
                   <Label>Bidang</Label>
                   <select
                     className="w-full p-2 border rounded"
-                    value={formData.expertise}
+                    value={formData.expertise || ''}
                     onChange={(e) => setFormData({...formData, expertise: e.target.value})}
+                    required
                   >
+                    <option value="">Pilih Bidang</option>
                     <option value="kurikulum">Kurikulum</option>
                     <option value="kesiswaan">Kesiswaan</option>
                     <option value="sarana">Sarana & Prasarana</option>
                     <option value="humas">Hubungan Masyarakat</option>
+                    <option value="bendahara">Bendahara</option>
+                  </select>
+                </div>
+              )}
+              {formData.role === 'program_head' && (
+                <div className="space-y-2">
+                  <Label>Bidang</Label>
+                  <select
+                    className="w-full p-2 border rounded"
+                    value={formData.expertise}
+                    onChange={(e) => setFormData({...formData, expertise: e.target.value})}
+                  >
+                    <option value="akuntansi">Akuntansi dan Keuangan Lembaga</option>
+                    <option value="tkj">Teknik Komputer Jaringan</option>
+                    <option value="rpl">Rekayasa Perangkat Lunak & Gim</option>
+                    
                   </select>
                 </div>
               )}
@@ -280,148 +354,247 @@ export default function TeacherStaffManager() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid gap-6">
-        {/* Leadership Section */}
-        {members.some(m => m.role === 'principal' || m.role === 'vice_principal') && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Kepemimpinan Sekolah</h2>
-            <div className="grid gap-4">
-              {members
-                .filter(m => m.role === 'principal' || m.role === 'vice_principal')
-                .map((member) => (
-                  <Card key={member.id} className="border-2 border-primary">
-                    <CardContent className="flex items-center p-4">
-                      {member.image && (
-                        <img
-                          src={getImageUrl(member.image)}
-                          alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover mr-4"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/150';
-                          }}
-                        />
-                      )}
-                      <div className="flex-grow">
-                        <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {member.type === 'teacher' ? member.subject : member.position}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setEditingMember(member);
-                          setFormData(member);
-                          setImagePreview(member.image ? { type: 'image', url: member.image } : null);
-                          setIsDialogOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          </div>
-        )}
+      {isLoading ? (
+        <div className="text-center p-4">Memuat data...</div>
+      ) : members.length === 0 ? (
+        <div className="text-center p-4">Tidak ada data</div>
+      ) : (
+        <div className="grid gap-6">
+          {/* Leadership Section */}
+          {members.some(m => ['principal', 'vice_principal', 'program_head'].includes(m.role)) && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold">Kepemimpinan Sekolah</h2>
+              <div className="grid md:grid-cols-3 gap-4">
+                {/* Principal Column */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-primary">Kepala Sekolah</h3>
+                  {members
+                    .filter(m => m.role === 'principal')
+                    .map((member) => (
+                      <Card key={member.id} className="border-2 border-primary">
+                        <CardContent className="flex items-center p-4">
+                          {member.image && (
+                            <img
+                              src={getImageUrl(member.image)}
+                              alt={member.name}
+                              className="w-12 h-12 rounded-full object-cover mr-4"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/150';
+                              }}
+                            />
+                          )}
+                          <div className="flex-grow">
+                            <h3 className="font-semibold">{member.name}</h3>
+                            <p className="text-sm text-gray-500">
+                              {getDisplayTitle(member)}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setEditingMember(member);
+                              setFormData(member);
+                              setImagePreview(member.image ? { type: 'image', url: member.image } : null);
+                              setIsDialogOpen(true);
+                            }}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
 
-        {/* Teachers Section */}
-        {members.some(m => m.role === 'teacher') && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Guru</h2>
-            <div className="grid gap-4">
-              {members
-                .filter(m => m.role === 'teacher')
-                .map((member) => (
-                  <Card key={member.id}>
-                    <CardContent className="flex items-center p-4">
-                      {member.image && (
-                        <img
-                          src={getImageUrl(member.image)}
-                          alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover mr-4"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/150';
-                          }}
-                        />
-                      )}
-                      <div className="flex-grow">
-                        <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {member.type === 'teacher' ? member.subject : member.position}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setEditingMember(member);
-                          setFormData(member);
-                          setImagePreview(member.image ? { type: 'image', url: member.image } : null);
-                          setIsDialogOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          </div>
-        )}
+                {/* Vice Principals Column */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-primary">Wakil Kepala Sekolah</h3>
+                  {members
+                    .filter(m => m.role === 'vice_principal')
+                    .sort((a, b) => a.expertise?.localeCompare(b.expertise))
+                    .map((member) => (
+                      <Card key={member.id} className="border-2 border-secondary">
+                        <CardContent className="flex items-center p-4">
+                          {member.image && (
+                            <img
+                              src={getImageUrl(member.image)}
+                              alt={member.name}
+                              className="w-12 h-12 rounded-full object-cover mr-4"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/150';
+                              }}
+                            />
+                          )}
+                          <div className="flex-grow">
+                            <h3 className="font-semibold">{member.name}</h3>
+                            <p className="text-sm text-gray-500">
+                              {getDisplayTitle(member)}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setEditingMember(member);
+                              setFormData(member);
+                              setImagePreview(member.image ? { type: 'image', url: member.image } : null);
+                              setIsDialogOpen(true);
+                            }}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
 
-        {/* Staff Section */}
-        {members.some(m => m.role === 'staff') && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Staff</h2>
-            <div className="grid gap-4">
-              {members
-                .filter(m => m.role === 'staff')
-                .map((member) => (
-                  <Card key={member.id}>
-                    <CardContent className="flex items-center p-4">
-                      {member.image && (
-                        <img
-                          src={getImageUrl(member.image)}
-                          alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover mr-4"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/150';
-                          }}
-                        />
-                      )}
-                      <div className="flex-grow">
-                        <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {member.type === 'teacher' ? member.subject : member.position}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setEditingMember(member);
-                          setFormData(member);
-                          setImagePreview(member.image ? { type: 'image', url: member.image } : null);
-                          setIsDialogOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {/* Program Heads Column */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-primary">Kepala Program</h3>
+                  {members
+                    .filter(m => m.role === 'program_head')
+                    .sort((a, b) => a.expertise?.localeCompare(b.expertise))
+                    .map((member) => (
+                      <Card key={member.id} className="border-2 border-secondary">
+                        <CardContent className="flex items-center p-4">
+                          {member.image && (
+                            <img
+                              src={getImageUrl(member.image)}
+                              alt={member.name}
+                              className="w-12 h-12 rounded-full object-cover mr-4"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/150';
+                              }}
+                            />
+                          )}
+                          <div className="flex-grow">
+                            <h3 className="font-semibold">{member.name}</h3>
+                            <p className="text-sm text-gray-500">
+                              {getDisplayTitle(member)}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setEditingMember(member);
+                              setFormData(member);
+                              setImagePreview(member.image ? { type: 'image', url: member.image } : null);
+                              setIsDialogOpen(true);
+                            }}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Teachers Section */}
+          {members.some(m => m.role === 'teacher') && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold">Guru</h2>
+              <div className="grid gap-4">
+                {members
+                  .filter(m => m.role === 'teacher')
+                  .map((member) => (
+                    <Card key={member.id}>
+                      <CardContent className="flex items-center p-4">
+                        {member.image && (
+                          <img
+                            src={getImageUrl(member.image)}
+                            alt={member.name}
+                            className="w-12 h-12 rounded-full object-cover mr-4"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/150';
+                            }}
+                          />
+                        )}
+                        <div className="flex-grow">
+                          <h3 className="font-semibold">{member.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {member.subject && `Mata Pelajaran: ${member.subject}`}
+                            {member.expertise && ` - ${member.expertise}`}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setEditingMember(member);
+                            setFormData(member);
+                            setImagePreview(member.image ? { type: 'image', url: member.image } : null);
+                            setIsDialogOpen(true);
+                          }}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Staff Section */}
+          {members.some(m => m.role === 'staff') && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold">Staff</h2>
+              <div className="grid gap-4">
+                {members
+                  .filter(m => m.role === 'staff')
+                  .map((member) => (
+                    <Card key={member.id}>
+                      <CardContent className="flex items-center p-4">
+                        {member.image && (
+                          <img
+                            src={getImageUrl(member.image)}
+                            alt={member.name}
+                            className="w-12 h-12 rounded-full object-cover mr-4"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/150';
+                            }}
+                          />
+                        )}
+                        <div className="flex-grow">
+                          <h3 className="font-semibold">{member.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {member.type === 'teacher' ? member.subject : member.position}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setEditingMember(member);
+                            setFormData(member);
+                            setImagePreview(member.image ? { type: 'image', url: member.image } : null);
+                            setIsDialogOpen(true);
+                          }}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
