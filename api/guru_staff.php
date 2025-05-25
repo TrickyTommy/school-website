@@ -57,7 +57,7 @@ try {
             $stmt = $db->prepare('INSERT INTO guru_staff (name, email, role, type, subject, expertise, position, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([
                 $data['name'],
-                $data['email'],
+                $data['email'] ?? null,
                 $data['role'],
                 $data['type'] ?? null,
                 $data['subject'] ?? null,
@@ -73,7 +73,7 @@ try {
             $stmt = $db->prepare('UPDATE guru_staff SET name=?, email=?, role=?, type=?, subject=?, expertise=?, position=?, image=? WHERE id=?');
             $stmt->execute([
                 $data['name'],
-                $data['email'],
+                $data['email'] ?? null,
                 $data['role'],
                 $data['type'] ?? null,
                 $data['subject'] ?? null,
