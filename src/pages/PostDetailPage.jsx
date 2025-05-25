@@ -4,9 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CalendarDays, UserCircle, Tag } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-
-// const API_URL = 'http://localhost/sekolah/api/postingan.php';
-const API_URL = 'http://localhost/postingan.php';
+import { API_ENDPOINTS } from '@/services/api';
 
 export default function PostDetailPage() {
   const { id } = useParams();
@@ -21,7 +19,7 @@ export default function PostDetailPage() {
 
   const loadPostDetail = async () => {
     try {
-      const response = await fetch(`${API_URL}?action=detail&id=${id}`);
+      const response = await fetch(`${API_ENDPOINTS.postingan}?action=detail&id=${id}`);
       const result = await response.json();
       
       console.log('API Response:', result); // Debug log

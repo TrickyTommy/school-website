@@ -8,9 +8,7 @@ import { FileUpload } from '@/components/FileUpload';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-
-// const API_URL = 'http://localhost/sekolah/api/postingan.php';
-const API_URL = 'http://localhost/postingan.php';
+import { API_ENDPOINTS } from '@/services/api';
 
 export default function PostinganManager() {
   const [posts, setPosts] = useState([]);
@@ -35,7 +33,7 @@ export default function PostinganManager() {
 
   const loadPosts = async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_ENDPOINTS.postingan);
       const result = await response.json();
       if (result.status === 'success') {
         setPosts(result.data);
@@ -83,7 +81,7 @@ export default function PostinganManager() {
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_ENDPOINTS.postingan, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -116,7 +114,7 @@ export default function PostinganManager() {
 
   const deletePost = async (postId) => {
     try {
-      const response = await fetch(`${API_URL}?id=${postId}`, {
+      const response = await fetch(`${API_ENDPOINTS.postingan}?id=${postId}`, {
         method: 'DELETE',
       });
       const result = await response.json();

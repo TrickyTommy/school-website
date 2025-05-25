@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { FileUpload } from '@/components/FileUpload';
+import { guruStaffAPI } from '@/services/api';
 
 export default function TeacherStaffManager() {
   const [members, setMembers] = useState([]);
@@ -24,13 +25,31 @@ export default function TeacherStaffManager() {
     position: '',
     image: null
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
-    const storedData = localStorage.getItem('teacherStaffData');
-    if (storedData) {
-      setMembers(JSON.parse(storedData));
-    }
+  useEffect(() => {
+    loadMembers();
   }, []);
+
+  const loadMembers = async () => {
+    try {
+      setIsLoading(true);
+      const result = await guruStaffAPI.getAll();
+      if (result.status === 'success') {
+        setMembers(result.data);
+      } else {
+        throw new Error(result.message || 'Failed to load data');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Gagal memuat data guru & staff",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleFileSelect = async (file) => {
     try {
@@ -55,34 +74,61 @@ export default function TeacherStaffManager() {
     });
   };
 
-  const handleSubmit = () => {
-    if (!formData.name || !formData.email) {
+  const handleSubmit = async () => {
+    try {
+      if (!formData.name || !formData.email) {
+        toast({
+          title: "Validation Error",
+          description: "Harap isi semua field yang wajib",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const action = editingMember ? guruStaffAPI.update : guruStaffAPI.create;
+      const result = await action(formData);
+
+      if (result.status === 'success') {
+        await loadMembers();
+        resetForm();
+        setIsDialogOpen(false);
+        toast({
+          title: "Berhasil",
+          description: result.message
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
       toast({
-        title: "Validation Error",
-        description: "Please fill all required fields",
+        title: "Error",
+        description: error.message || "Gagal menyimpan data",
         variant: "destructive"
       });
-      return;
     }
+  };
 
-    const newMember = {
-      id: editingMember?.id || `member${Date.now()}`,
-      ...formData,
-      date: editingMember?.date || new Date().toISOString()
-    };
-
-    const updatedMembers = editingMember
-      ? members.map(m => m.id === editingMember.id ? newMember : m)
-      : [...members, newMember];
-
-    setMembers(updatedMembers);
-    localStorage.setItem('teacherStaffData', JSON.stringify(updatedMembers));
-    resetForm();
-    setIsDialogOpen(false);
-    toast({
-      title: `${editingMember ? 'Updated' : 'Added'} successfully`,
-      description: `Member has been ${editingMember ? 'updated' : 'added'}.`
-    });
+  const handleDelete = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+      try {
+        const result = await guruStaffAPI.delete(id);
+        if (result.status === 'success') {
+          await loadMembers();
+          toast({
+            title: "Berhasil",
+            description: result.message
+          });
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error.message || "Gagal menghapus data",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const resetForm = () => {
@@ -98,6 +144,12 @@ export default function TeacherStaffManager() {
     });
     setImagePreview(null);
     setEditingMember(null);
+  };
+
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('data:image/')) return image;
+    return `data:image/jpeg;base64,${image}`;
   };
 
   return (
@@ -241,9 +293,13 @@ export default function TeacherStaffManager() {
                     <CardContent className="flex items-center p-4">
                       {member.image && (
                         <img
-                          src={member.image}
+                          src={getImageUrl(member.image)}
                           alt={member.name}
                           className="w-12 h-12 rounded-full object-cover mr-4"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/150';
+                          }}
                         />
                       )}
                       <div className="flex-grow">
@@ -261,16 +317,7 @@ export default function TeacherStaffManager() {
                         }}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => {
-                          setMembers(prev => prev.filter(m => m.id !== member.id));
-                          localStorage.setItem('teacherStaffData', JSON.stringify(
-                            members.filter(m => m.id !== member.id)
-                          ));
-                          toast({
-                            title: "Deleted successfully",
-                            description: "Member has been removed."
-                          });
-                        }}>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -293,9 +340,13 @@ export default function TeacherStaffManager() {
                     <CardContent className="flex items-center p-4">
                       {member.image && (
                         <img
-                          src={member.image}
+                          src={getImageUrl(member.image)}
                           alt={member.name}
                           className="w-12 h-12 rounded-full object-cover mr-4"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/150';
+                          }}
                         />
                       )}
                       <div className="flex-grow">
@@ -313,16 +364,7 @@ export default function TeacherStaffManager() {
                         }}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => {
-                          setMembers(prev => prev.filter(m => m.id !== member.id));
-                          localStorage.setItem('teacherStaffData', JSON.stringify(
-                            members.filter(m => m.id !== member.id)
-                          ));
-                          toast({
-                            title: "Deleted successfully",
-                            description: "Member has been removed."
-                          });
-                        }}>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -345,9 +387,13 @@ export default function TeacherStaffManager() {
                     <CardContent className="flex items-center p-4">
                       {member.image && (
                         <img
-                          src={member.image}
+                          src={getImageUrl(member.image)}
                           alt={member.name}
                           className="w-12 h-12 rounded-full object-cover mr-4"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/150';
+                          }}
                         />
                       )}
                       <div className="flex-grow">
@@ -365,16 +411,7 @@ export default function TeacherStaffManager() {
                         }}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => {
-                          setMembers(prev => prev.filter(m => m.id !== member.id));
-                          localStorage.setItem('teacherStaffData', JSON.stringify(
-                            members.filter(m => m.id !== member.id)
-                          ));
-                          toast({
-                            title: "Deleted successfully",
-                            description: "Member has been removed."
-                          });
-                        }}>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(member.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

@@ -5,9 +5,7 @@ import React, { useState, useEffect } from 'react';
     import { Newspaper, Image as ImageIcon, Video, PlusCircle, Edit, Trash2, CalendarDays, UserCircle, Tag, AlertTriangle } from 'lucide-react';
     import { useToast } from '@/components/ui/use-toast';
     import { useNavigate } from 'react-router-dom';
-
-    // const API_URL = 'http://localhost/sekolah/api/postingan.php';
-    const API_URL = 'http://localhost/postingan.php';
+    import { API_ENDPOINTS } from '@/services/api';
 
     const PostinganPage = () => {
       const navigate = useNavigate();
@@ -26,7 +24,7 @@ import React, { useState, useEffect } from 'react';
       const loadPosts = async () => {
         try {
           setIsLoading(true);
-          const response = await fetch(API_URL);
+          const response = await fetch(API_ENDPOINTS.postingan);
           const result = await response.json();
           
           if (result.status === 'success') {

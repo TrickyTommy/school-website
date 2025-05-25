@@ -14,6 +14,7 @@ $username = 'root';
 $password = '';
 $charset = 'utf8mb4';
 
+
 // Database connection with error handling
 try {
     $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";

@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost/sekolah/api';
+const BASE_URL = 'http://localhost/sekolah/api';
+
+export const API_ENDPOINTS = {
+    postingan: `${BASE_URL}/postingan.php`,
+    guruStaff: `${BASE_URL}/guru_staff.php`
+};
 
 export const postinganAPI = {
   getAll: async () => {
@@ -32,4 +37,36 @@ export const postinganAPI = {
     });
     return response.json();
   }
+};
+
+export const guruStaffAPI = {
+    getAll: async () => {
+        const response = await fetch(API_ENDPOINTS.guruStaff);
+        return response.json();
+    },
+
+    create: async (data) => {
+        const response = await fetch(API_ENDPOINTS.guruStaff, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    update: async (data) => {
+        const response = await fetch(API_ENDPOINTS.guruStaff, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    delete: async (id) => {
+        const response = await fetch(`${API_ENDPOINTS.guruStaff}?id=${id}`, {
+            method: 'DELETE'
+        });
+        return response.json();
+    }
 };
