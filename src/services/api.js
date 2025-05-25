@@ -57,6 +57,10 @@ export const guruStaffAPI = {
     },
 
     create: async (data) => {
+        // If email is empty string or null, remove it from the request
+        if (!data.email) {
+            delete data.email;
+        }
         const response = await fetch(API_ENDPOINTS.guruStaff, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -66,6 +70,10 @@ export const guruStaffAPI = {
     },
 
     update: async (data) => {
+        // If email is empty string or null, remove it from the request
+        if (!data.email) {
+            delete data.email;
+        }
         const response = await fetch(API_ENDPOINTS.guruStaff, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

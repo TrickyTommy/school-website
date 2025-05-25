@@ -80,10 +80,10 @@ export default function TeacherStaffManager() {
 
   const handleSubmit = async () => {
     try {
-      if (!formData.name || !formData.email || !formData.role) {
+      if (!formData.name || !formData.role) {
         toast({
           title: "Validation Error",
-          description: "Harap isi semua field yang wajib",
+          description: "Harap isi nama dan kategori",
           variant: "destructive"
         });
         return;
