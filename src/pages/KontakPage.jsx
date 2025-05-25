@@ -85,7 +85,7 @@ import React from 'react';
                     <CardContent>
                         <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700">
                            <iframe 
-                                src="https://www.openstreetmap.org/export/embed.html?bbox=107.2900%2C-6.3300%2C107.3100%2C-6.3100&layer=mapnik&marker=-6.3200,107.3000" 
+                                src="https://www.openstreetmap.org/?mlat=-6.336754&mlon=107.277589#map=16/-6.336754/107.277589" 
                                 style={{border:0, width: '100%', height: '100%'}} 
                                 allowFullScreen="" 
                                 loading="lazy" 

@@ -182,6 +182,7 @@ const ProfilGuruStaffPage = () => {
           <motion.section variants={fadeInUp} initial="initial" animate="animate" className="w-full">
             {/* Principal - Full Width */}
             <div className="mb-8 max-w-3xl mx-auto">
+              <h3 className="text-xl font-bold text-center mb-4"> Kepala Sekolah</h3>
               {leadership
                 .filter(l => l.role === 'principal')
                 .map((leader) => (
