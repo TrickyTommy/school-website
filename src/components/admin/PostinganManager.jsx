@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function PostinganManager({ postinganList, setPostinganList }) {
+// const API_URL = 'http://localhost/sekolah/api/postingan.php';
+const API_URL = 'http://localhost/postingan.php';
+
+export default function PostinganManager() {
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -19,8 +25,29 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
     title: '',
     content: '',
     type: 'berita',
-    category: ''
+    category: '',
+    image: null
   });
+
+  useEffect(() => {
+    loadPosts();
+  }, []);
+
+  const loadPosts = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const result = await response.json();
+      if (result.status === 'success') {
+        setPosts(result.data);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load posts",
+        variant: "destructive"
+      });
+    }
+  };
 
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -40,6 +67,10 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
         url: base64String,
         type
       });
+      setFormData(prev => ({
+        ...prev,
+        image: base64String
+      }));
     } catch (error) {
       toast({
         title: "Error",
@@ -49,37 +80,63 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
     }
   };
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.content) {
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          id: `post_${Date.now()}`
+        })
+      });
+
+      const result = await response.json();
+      if (result.status === 'success') {
+        await loadPosts();
+        resetForm();
+        toast({
+          title: "Success",
+          description: "Post created successfully"
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: error.message || "Failed to save post",
         variant: "destructive"
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const newPost = {
-      id: editingPost?.id || `post${Date.now()}`,
-      ...formData,
-      image: filePreview?.type === 'image' ? filePreview.url : null,
-      videoUrl: filePreview?.type === 'video' ? filePreview.url : null,
-      date: editingPost?.date || new Date().toISOString(),
-      author: 'Admin'
-    };
-
-    const updatedList = editingPost 
-      ? postinganList.map(p => p.id === editingPost.id ? newPost : p)
-      : [newPost, ...postinganList];
-
-    setPostinganList(updatedList);
-    localStorage.setItem('postinganData', JSON.stringify(updatedList));
-    resetForm();
-    setIsDialogOpen(false);
-    toast({
-      title: `${editingPost ? 'Updated' : 'Created'} successfully`,
-      description: `Post has been ${editingPost ? 'updated' : 'created'}.`
-    });
+  const deletePost = async (postId) => {
+    try {
+      const response = await fetch(`${API_URL}?id=${postId}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        await loadPosts(); // Reload posts after successful deletion
+        toast({
+          title: "Berhasil dihapus",
+          description: "Postingan telah dihapus."
+        });
+      } else {
+        throw new Error(result.message || 'Failed to delete post');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Gagal menghapus postingan",
+        variant: "destructive"
+      });
+    }
   };
 
   const resetForm = () => {
@@ -87,7 +144,8 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
       title: '',
       content: '',
       type: 'berita',
-      category: ''
+      category: '',
+      image: null
     });
     setUploadedFile(null);
     setFilePreview(null);
@@ -101,11 +159,12 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-background z-10 pb-4">
             <DialogTitle>{editingPost ? 'Edit' : 'Buat'} Postingan</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          <div className="space-y-4 pb-20">
             <div className="grid gap-4">
               <div className="space-y-2">
                 <Label>Jenis Postingan</Label>
@@ -157,24 +216,24 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
                 />
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => {
-                setIsDialogOpen(false);
-                resetForm();
-              }}>
-                Batal
-              </Button>
-              <Button onClick={handleSubmit}>
-                {editingPost ? 'Perbarui' : 'Buat'} Postingan
-              </Button>
-            </div>
+          <div className="flex justify-end space-x-2 sticky bottom-0 bg-background pt-4 mt-4 border-t">
+            <Button variant="outline" onClick={() => {
+              setIsDialogOpen(false);
+              resetForm();
+            }}>
+              Batal
+            </Button>
+            <Button onClick={handleSubmit} disabled={isLoading}>
+              {editingPost ? 'Perbarui' : 'Buat'} Postingan
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <div className="grid gap-4">
-        {postinganList.map((post) => (
+        {posts.map((post) => (
           <Card key={post.id}>
             <CardContent className="flex justify-between items-center p-4">
               <div>
@@ -196,14 +255,7 @@ export default function PostinganManager({ postinganList, setPostinganList }) {
                 }}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => {
-                  setPostinganList(prev => prev.filter(p => p.id !== post.id));
-                  localStorage.setItem('postinganData', JSON.stringify(postinganList.filter(p => p.id !== post.id)));
-                  toast({
-                    title: "Berhasil dihapus",
-                    description: "Postingan telah dihapus."
-                  });
-                }}>
+                <Button variant="destructive" size="sm" onClick={() => deletePost(post.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>

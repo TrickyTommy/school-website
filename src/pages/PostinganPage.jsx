@@ -6,31 +6,44 @@ import React, { useState, useEffect } from 'react';
     import { useToast } from '@/components/ui/use-toast';
     import { useNavigate } from 'react-router-dom';
 
-    const initialPostinganData = [
-      { id: 'post1', title: 'Kegiatan Class Meeting Akhir Semester', type: 'berita', content: 'Siswa-siswi SMK Budi Mulia Karawang mengikuti berbagai lomba dalam class meeting...', image: 'Siswa bermain basket saat class meeting', videoUrl: null, date: '2025-05-20', author: 'Admin Sekolah', category: 'Kegiatan Sekolah' },
-      { id: 'post2', title: 'Juara 1 Lomba Kompetensi Siswa (LKS) Tingkat Kabupaten', type: 'berita', content: 'Selamat kepada tim TKJ yang berhasil meraih juara 1 LKS bidang IT Network Systems Administration.', image: 'Siswa menerima piala LKS', videoUrl: null, date: '2025-05-15', author: 'Humas Sekolah', category: 'Prestasi' },
-      { id: 'post3', title: 'Galeri Foto Studi Wisata ke Bandung', type: 'foto', content: 'Kumpulan foto keceriaan siswa saat studi wisata ke berbagai tempat edukatif di Bandung.', image: 'Siswa berfoto di depan gedung sate bandung', videoUrl: null, date: '2025-05-10', author: 'Tim Dokumentasi', category: 'Studi Wisata' },
-      { id: 'post4', title: 'Video Profil Jurusan RPLG', type: 'video', content: 'Saksikan video profil menarik tentang jurusan Rekayasa Perangkat Lunak dan Gim di SMK Budi Mulia Karawang.', image: 'Thumbnail video profil jurusan RPLG', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', date: '2025-05-05', author: 'Tim Multimedia', category: 'Profil Jurusan' },
-    ];
-    
+    // const API_URL = 'http://localhost/sekolah/api/postingan.php';
+    const API_URL = 'http://localhost/postingan.php';
+
     const PostinganPage = () => {
       const navigate = useNavigate();
       const [postinganList, setPostinganList] = useState([]);
       const [filter, setFilter] = useState('semua');
       const { toast } = useToast();
       const [isAdmin, setIsAdmin] = useState(false);
+      const [isLoading, setIsLoading] = useState(true);
 
       useEffect(() => {
-        const storedPostingan = localStorage.getItem('postinganData');
-        if (storedPostingan) {
-          setPostinganList(JSON.parse(storedPostingan));
-        } else {
-          setPostinganList(initialPostinganData);
-          localStorage.setItem('postinganData', JSON.stringify(initialPostinganData));
-        }
+        loadPosts();
         const adminStatus = localStorage.getItem('isAdmin') === 'true';
         setIsAdmin(adminStatus);
       }, []);
+
+      const loadPosts = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetch(API_URL);
+          const result = await response.json();
+          
+          if (result.status === 'success') {
+            setPostinganList(result.data);
+          } else {
+            throw new Error(result.message || 'Failed to load posts');
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Gagal memuat postingan",
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
       const filteredPostingan = postinganList.filter(post => 
         filter === 'semua' || post.type === filter
@@ -67,7 +80,7 @@ import React, { useState, useEffect } from 'react';
       };
 
       const handlePostClick = (postId) => {
-        navigate(`/postingan/${postId}`);
+        navigate(`/postingan/detail/${postId}`);
       };
 
       const getPostIcon = (type) => {
@@ -107,7 +120,13 @@ import React, { useState, useEffect } from 'react';
            
           </div>
           
-          {filteredPostingan.length === 0 ? (
+          {isLoading ? (
+            <Card className="md:col-span-2 lg:col-span-3 glassmorphic">
+              <CardContent className="p-6 text-center">
+                <p className="text-gray-500">Memuat postingan...</p>
+              </CardContent>
+            </Card>
+          ) : filteredPostingan.length === 0 ? (
              <Card className="md:col-span-2 lg:col-span-3 glassmorphic">
                 <CardContent className="p-6 text-center">
                   <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />

@@ -31,6 +31,7 @@ import React from 'react';
                   <Route path="/profil/tentang-kami" element={<ProfilTentangKamiPage />} />
                   <Route path="/profil/guru-staff" element={<ProfilGuruStaffPage />} />
                   <Route path="/postingan/:id" element={<PostDetailPage />} />
+                  <Route path="/postingan/detail/:id" element={<PostDetailPage />} />
                 </Routes>
               </main>
               <Footer />
