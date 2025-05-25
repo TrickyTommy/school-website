@@ -226,130 +226,135 @@ export default function TeacherStaffManager() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingMember ? 'Edit' : 'Add'} Member</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label>Kategori</Label>
-                <select
-                  className="w-full p-2 border rounded"
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
-                >
-                  <option value="principal">Kepala Sekolah</option>
-                  <option value="vice_principal">Wakil Kepala Sekolah</option>
-                  <option value="program_head">Kepala Program</option>
-                  <option value="teacher">Guru</option>
-                  <option value="staff">Staff</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                />
-              </div>
-
-              {formData.type === 'teacher' ? (
-                <>
-                  <div className="space-y-2">
-                    <Label>Mata Pelajaran </Label>
-                    <Input
-                      value={formData.subject}
-                      onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Expertise</Label>
-                    <Input
-                      value={formData.expertise}
-                      onChange={(e) => setFormData({...formData, expertise: e.target.value})}
-                    />
-                  </div>
-                </>
-              ) : (
+          
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto pr-2">
+            <div className="space-y-4">
+              <div className="grid gap-4">
                 <div className="space-y-2">
-                  <Label>Position</Label>
+                  <Label>Kategori</Label>
+                  <select
+                    className="w-full p-2 border rounded"
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  >
+                    <option value="principal">Kepala Sekolah</option>
+                    <option value="vice_principal">Wakil Kepala Sekolah</option>
+                    <option value="program_head">Kepala Program</option>
+                    <option value="teacher">Guru</option>
+                    <option value="staff">Staff</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Name</Label>
                   <Input
-                    value={formData.position}
-                    onChange={(e) => setFormData({...formData, position: e.target.value})}
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
                 </div>
-              )}
 
-              {formData.role === 'vice_principal' && (
                 <div className="space-y-2">
-                  <Label>Bidang</Label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={formData.expertise || ''}
-                    onChange={(e) => setFormData({...formData, expertise: e.target.value})}
-                    required
-                  >
-                    <option value="">Pilih Bidang</option>
-                    <option value="kurikulum">Kurikulum</option>
-                    <option value="kesiswaan">Kesiswaan</option>
-                    <option value="sarana">Sarana & Prasarana</option>
-                    <option value="humas">Hubungan Masyarakat</option>
-                    <option value="bendahara">Bendahara</option>
-                  </select>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  />
                 </div>
-              )}
-              {formData.role === 'program_head' && (
-                <div className="space-y-2">
-                  <Label>Bidang</Label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={formData.expertise}
-                    onChange={(e) => setFormData({...formData, expertise: e.target.value})}
-                  >
-                    <option value="akuntansi">Akuntansi dan Keuangan Lembaga</option>
-                    <option value="tkj">Teknik Komputer Jaringan</option>
-                    <option value="rpl">Rekayasa Perangkat Lunak & Gim</option>
-                    
-                  </select>
-                </div>
-              )}
 
-              <div className="space-y-2">
-                <Label>Photo</Label>
-                <FileUpload
-                  accept="image/*"
-                  onFileSelect={handleFileSelect}
-                  preview={imagePreview}
-                  onClear={() => {
-                    setImagePreview(null);
-                    setFormData(prev => ({ ...prev, image: null }));
-                  }}
-                />
+                {formData.type === 'teacher' ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Mata Pelajaran </Label>
+                      <Input
+                        value={formData.subject}
+                        onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Expertise</Label>
+                      <Input
+                        value={formData.expertise}
+                        onChange={(e) => setFormData({...formData, expertise: e.target.value})}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Position</Label>
+                    <Input
+                      value={formData.position}
+                      onChange={(e) => setFormData({...formData, position: e.target.value})}
+                    />
+                  </div>
+                )}
+
+                {formData.role === 'vice_principal' && (
+                  <div className="space-y-2">
+                    <Label>Bidang</Label>
+                    <select
+                      className="w-full p-2 border rounded"
+                      value={formData.expertise || ''}
+                      onChange={(e) => setFormData({...formData, expertise: e.target.value})}
+                      required
+                    >
+                      <option value="">Pilih Bidang</option>
+                      <option value="kurikulum">Kurikulum</option>
+                      <option value="kesiswaan">Kesiswaan</option>
+                      <option value="sarana">Sarana & Prasarana</option>
+                      <option value="humas">Hubungan Masyarakat</option>
+                      <option value="bendahara">Bendahara</option>
+                    </select>
+                  </div>
+                )}
+                {formData.role === 'program_head' && (
+                  <div className="space-y-2">
+                    <Label>Bidang</Label>
+                    <select
+                      className="w-full p-2 border rounded"
+                      value={formData.expertise}
+                      onChange={(e) => setFormData({...formData, expertise: e.target.value})}
+                    >
+                      <option value="akuntansi">Akuntansi dan Keuangan Lembaga</option>
+                      <option value="tkj">Teknik Komputer Jaringan</option>
+                      <option value="rpl">Rekayasa Perangkat Lunak & Gim</option>
+                      
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Photo</Label>
+                  <FileUpload
+                    accept="image/*"
+                    onFileSelect={handleFileSelect}
+                    preview={imagePreview}
+                    onClear={() => {
+                      setImagePreview(null);
+                      setFormData(prev => ({ ...prev, image: null }));
+                    }}
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => {
-                setIsDialogOpen(false);
-                resetForm();
-              }}>
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit}>
-                {editingMember ? 'Update' : 'Add'} Member
-              </Button>
-            </div>
+          {/* Sticky footer with buttons */}
+          <div className="sticky bottom-0 pt-4 mt-4 border-t bg-background flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => {
+              setIsDialogOpen(false);
+              resetForm();
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>
+              {editingMember ? 'Update' : 'Add'} Member
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
