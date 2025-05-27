@@ -24,7 +24,9 @@ export default function PostinganManager() {
     content: '',
     type: 'berita',
     category: '',
-    image: null
+    image: null,
+    videoUrl: '',
+    video: null
   });
 
   useEffect(() => {
@@ -60,19 +62,58 @@ export default function PostinganManager() {
     try {
       const base64String = await convertToBase64(file);
       setUploadedFile(file);
-      const type = file.type.startsWith('image/') ? 'image' : 'video';
-      setFilePreview({
-        url: base64String,
-        type
-      });
+      
+      // Determine file type and handle accordingly
+      const isVideo = file.type.startsWith('video/');
+      const preview = {
+        type: isVideo ? 'video' : 'image',
+        url: base64String
+      };
+      
+      setFilePreview(preview);
       setFormData(prev => ({
         ...prev,
-        image: base64String
+        [isVideo ? 'video' : 'image']: base64String,
+        [isVideo ? 'image' : 'video']: null
       }));
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to process file",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getYouTubeEmbedUrl = (url) => {
+    try {
+      let videoId;
+      // Handle different YouTube URL formats
+      if (url.includes('youtube.com/watch?v=')) {
+        videoId = url.split('v=')[1].split('&')[0];
+      } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+      }
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    } catch (error) {
+      console.error('Invalid YouTube URL:', error);
+      return null;
+    }
+  };
+
+  const validateYouTubeUrl = (url) => {
+    const embedUrl = getYouTubeEmbedUrl(url);
+    return !!embedUrl;
+  };
+
+  const handleVideoUrlChange = (e) => {
+    const url = e.target.value;
+    if (!url || validateYouTubeUrl(url)) {
+      setFormData({ ...formData, videoUrl: url });
+    } else {
+      toast({
+        title: "Error",
+        description: "URL YouTube tidak valid",
         variant: "destructive"
       });
     }
@@ -143,11 +184,31 @@ export default function PostinganManager() {
       content: '',
       type: 'berita',
       category: '',
-      image: null
+      image: null,
+      videoUrl: '',
+      video: null
     });
     setUploadedFile(null);
     setFilePreview(null);
     setEditingPost(null);
+  };
+
+  const YouTubeEmbed = ({ url, title }) => {
+    const embedUrl = getYouTubeEmbedUrl(url);
+    if (!embedUrl) return null;
+
+    return (
+      <div className="relative w-full h-full">
+        <iframe
+          src={embedUrl}
+          title={title || "YouTube video"}
+          className="absolute top-0 left-0 w-full h-full rounded-lg"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
   };
 
   return (
@@ -202,14 +263,36 @@ export default function PostinganManager() {
                 />
               </div>
 
+              {formData.type === 'video' && (
+                <div className="space-y-2">
+                  <Label>URL Video YouTube</Label>
+                  <Input
+                    value={formData.videoUrl}
+                    onChange={handleVideoUrlChange}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                  {formData.videoUrl && validateYouTubeUrl(formData.videoUrl) && (
+                    <div className="mt-2 aspect-video">
+                      <YouTubeEmbed url={formData.videoUrl} />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label>Unggah Media</Label>
+                <Label>Unggah {formData.type === 'video' ? 'Video' : 'Foto'}</Label>
                 <FileUpload
                   onFileSelect={handleFileSelect}
                   preview={filePreview}
+                  accept={formData.type === 'video' ? 'video/*' : 'image/*'}
                   onClear={() => {
                     setUploadedFile(null);
                     setFilePreview(null);
+                    setFormData(prev => ({
+                      ...prev,
+                      image: null,
+                      video: null
+                    }));
                   }}
                 />
               </div>
@@ -234,9 +317,24 @@ export default function PostinganManager() {
         {posts.map((post) => (
           <Card key={post.id}>
             <CardContent className="flex justify-between items-center p-4">
-              <div>
-                <h3 className="font-semibold">{post.title}</h3>
-                <p className="text-sm text-gray-500">{post.type}</p>
+              <div className="flex items-center space-x-4">
+                {post.type === 'video' && (post.video || post.videoUrl) && (
+                  <div className="w-32 h-20 bg-gray-100 rounded overflow-hidden">
+                    {post.videoUrl ? (
+                      <YouTubeEmbed url={post.videoUrl} title={post.title} />
+                    ) : (
+                      <video
+                        src={post.video}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                    )}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold">{post.title}</h3>
+                  <p className="text-sm text-gray-500">{post.type}</p>
+                </div>
               </div>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" onClick={() => {

@@ -85,6 +85,47 @@ import React, { useState, useEffect } from 'react';
         return null;
       };
 
+      const getYouTubeEmbedUrl = (url) => {
+        try {
+          let videoId;
+          if (url.includes('youtube.com/watch?v=')) {
+            videoId = url.split('v=')[1].split('&')[0];
+          } else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1].split('?')[0];
+          }
+          return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+        } catch (error) {
+          console.error('Invalid YouTube URL:', error);
+          return null;
+        }
+      };
+
+      const VideoContent = ({ post }) => {
+        if (post.videoUrl && post.videoUrl.includes('youtube')) {
+          const embedUrl = getYouTubeEmbedUrl(post.videoUrl);
+          if (!embedUrl) return null;
+          
+          return (
+            <iframe
+              src={embedUrl}
+              title={post.title}
+              className="absolute top-0 left-0 w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          );
+        } else if (post.video) {
+          return (
+            <video
+              src={post.video}
+              controls
+              className="absolute top-0 left-0 w-full h-full object-contain"
+            />
+          );
+        }
+        return null;
+      };
+
       return (
         <div className="space-y-12">
           <motion.section 
@@ -149,22 +190,16 @@ import React, { useState, useEffect } from 'react';
                     className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60 cursor-pointer"
                     onClick={() => handlePostClick(post)}
                   >
-                    {(post.image || post.videoUrl) && (
-                      <div className="relative w-full pt-[56.25%] overflow-hidden"> {/* 16:9 aspect ratio container */}
+                    {(post.image || post.video || post.videoUrl) && (
+                      <div className="relative w-full pt-[56.25%] overflow-hidden bg-gray-100 dark:bg-gray-800">
                         {post.image ? (
                           <img   
                             alt={post.title} 
-                            className="absolute top-0 left-0 w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
+                            className="absolute top-0 left-0 w-full h-full object-contain"
                             src={post.image}
                           />
-                        ) : post.videoUrl && (
-                          <div className="absolute top-0 left-0 w-full h-full">
-                            <video 
-                              src={post.videoUrl} 
-                              controls
-                              className="w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
-                            />
-                          </div>
+                        ) : (
+                          <VideoContent post={post} />
                         )}
                       </div>
                     )}
