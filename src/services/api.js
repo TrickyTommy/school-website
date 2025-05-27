@@ -1,11 +1,12 @@
 import axios from 'axios';
 
-// const BASE_URL = 'http://localhost/sekolah/api';
-const BASE_URL = 'https://floralwhite-wildcat-164447.hostingersite.com/';
+const BASE_URL = 'http://localhost/sekolah/api';
+// const BASE_URL = 'https://floralwhite-wildcat-164447.hostingersite.com/';
 
 export const API_ENDPOINTS = {
     postingan: `${BASE_URL}/postingan.php`,
-    guruStaff: `${BASE_URL}/guru_staff.php`
+    guruStaff: `${BASE_URL}/guru_staff.php`,
+    jurusan: `${BASE_URL}/jurusan.php`  // Add this line
 };
 
 // Add simple cache
@@ -190,4 +191,57 @@ export const guruStaffAPI = {
             img.src = base64String;
         });
     },
+};
+
+export const jurusanAPI = {
+    getAll: async () => {
+        try {
+            const response = await fetch(API_ENDPOINTS.jurusan);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    },
+
+    create: async (data) => {
+        try {
+            const response = await fetch(API_ENDPOINTS.jurusan, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    },
+
+    update: async (data) => {
+        try {
+            const response = await fetch(API_ENDPOINTS.jurusan, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    },
+
+    delete: async (id) => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.jurusan}?id=${id}`, {
+                method: 'DELETE'
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
 };

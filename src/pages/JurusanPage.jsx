@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
     import { motion } from 'framer-motion';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-    import { Briefcase, Cpu, Code, PlusCircle, Edit, Trash2, AlertTriangle } from 'lucide-react';
-    import { Button } from '@/components/ui/button';
+    import { Briefcase, Cpu, Code, AlertTriangle, Play } from 'lucide-react';
     import { useToast } from '@/components/ui/use-toast';
+    import { jurusanAPI } from '@/services/api';
 
-    const initialJurusanData = [
-      { id: 'akl', name: 'Akuntansi dan Keuangan Lembaga', description: 'Mempelajari pengelolaan keuangan perusahaan, perpajakan, dan audit. Lulusan siap bekerja di sektor keuangan, perbankan, atau menjadi akuntan profesional.', icon: Briefcase, color: 'text-green-500', image: 'Suasana kelas Akuntansi dengan siswa belajar serius' },
-      { id: 'tkj', name: 'Teknik Komputer Jaringan', description: 'Fokus pada instalasi, konfigurasi, dan pemeliharaan jaringan komputer, serta keamanan siber. Prospek karir meliputi teknisi jaringan, administrator sistem, dan spesialis IT.', icon: Cpu, color: 'text-blue-500', image: 'Siswa TKJ sedang merakit komputer di laboratorium' },
-      { id: 'rplg', name: 'Rekayasa Perangkat Lunak dan Gim', description: 'Mengembangkan aplikasi web, mobile, desktop, dan game. Siswa akan belajar bahasa pemrograman, desain UI/UX, dan manajemen proyek perangkat lunak.', icon: Code, color: 'text-purple-500', image: 'Siswa RPLG berdiskusi tentang kode program di depan monitor' },
-    ];
-    
     const iconComponents = {
       Briefcase: Briefcase,
       Cpu: Cpu,
@@ -19,21 +13,33 @@ import React, { useState, useEffect } from 'react';
 
     const JurusanPage = () => {
       const [jurusanList, setJurusanList] = useState([]);
+      const [isLoading, setIsLoading] = useState(true);
       const { toast } = useToast();
-      const [isAdmin, setIsAdmin] = useState(false);
 
       useEffect(() => {
-        const storedJurusan = localStorage.getItem('jurusanData');
-        if (storedJurusan) {
-          const parsedJurusan = JSON.parse(storedJurusan);
-          setJurusanList(parsedJurusan.map(j => ({...j, icon: iconComponents[j.icon] || Briefcase })));
-        } else {
-          setJurusanList(initialJurusanData.map(j => ({...j, icon: j.icon || Briefcase }))); // Ensure icon is component
-          localStorage.setItem('jurusanData', JSON.stringify(initialJurusanData.map(j => ({...j, icon: Object.keys(iconComponents).find(key => iconComponents[key] === j.icon) || 'Briefcase' }))));
-        }
-        const adminStatus = localStorage.getItem('isAdmin') === 'true';
-        setIsAdmin(adminStatus);
+        loadJurusan();
       }, []);
+
+      const loadJurusan = async () => {
+        try {
+          setIsLoading(true);
+          const result = await jurusanAPI.getAll();
+          if (result.status === 'success') {
+            setJurusanList(result.data.map(j => ({
+              ...j,
+              icon: iconComponents[j.icon] || Briefcase
+            })));
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Gagal memuat data jurusan",
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
       const fadeInUp = {
         initial: { opacity: 0, y: 60 },
@@ -49,9 +55,6 @@ import React, { useState, useEffect } from 'react';
         }
       };
 
-     
-
-
       return (
         <div className="space-y-12">
           <motion.section 
@@ -66,15 +69,19 @@ import React, { useState, useEffect } from 'react';
             </p>
           </motion.section>
 
-
-
           <motion.div 
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             variants={staggerContainer}
             initial="initial"
             animate="animate"
           >
-            {jurusanList.length === 0 && (
+            {isLoading ? (
+              <Card className="md:col-span-2 lg:col-span-3 glassmorphic">
+                <CardContent className="p-6 text-center">
+                  <p className="text-gray-500">Memuat data jurusan...</p>
+                </CardContent>
+              </Card>
+            ) : jurusanList.length === 0 ? (
               <Card className="md:col-span-2 lg:col-span-3 glassmorphic">
                 <CardContent className="p-6 text-center">
                   <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
@@ -82,34 +89,54 @@ import React, { useState, useEffect } from 'react';
                   <p className="text-gray-500 dark:text-gray-400">Silakan tambahkan jurusan baru melalui halaman Admin.</p>
                 </CardContent>
               </Card>
+            ) : (
+              jurusanList.map((jurusan) => {
+                const IconComponent = jurusan.icon;
+                return (
+                  <motion.div key={jurusan.id} variants={fadeInUp} className="h-full">
+                    <Card className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 glassmorphic dark:bg-gray-800/60 border-transparent hover:border-purple-500">
+                      <div className="relative h-56 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                        {jurusan.video_url ? (
+                          <div className="w-full h-full">
+                            <iframe
+                              src={`https://www.youtube.com/embed/${jurusan.video_url.split('v=')[1]}`}
+                              title={jurusan.name}
+                              className="w-full h-full"
+                              allowFullScreen
+                            />
+                          </div>
+                        ) : jurusan.image ? (
+                          <img   
+                            alt={`Ilustrasi ${jurusan.name}`} 
+                            className="w-full h-full object-contain"
+                            src={jurusan.image.startsWith('data:') ? jurusan.image : `data:image/jpeg;base64,${jurusan.image}`}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            {IconComponent && <IconComponent className="w-16 h-16 text-gray-400" />}
+                          </div>
+                        )}
+                        <div className={`absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-gray-900/80 shadow-md ${jurusan.color}`}>
+                          {IconComponent && <IconComponent className="w-8 h-8" />}
+                        </div>
+                      </div>
+                      
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-2xl font-bold text-gray-800 dark:text-white">
+                          {jurusan.name}
+                        </CardTitle>
+                      </CardHeader>
+                      
+                      <CardContent className="flex-grow">
+                        <CardDescription className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
+                          {jurusan.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })
             )}
-            {jurusanList.map((jurusan) => {
-              const IconComponent = jurusan.icon;
-              return (
-              <motion.div key={jurusan.id} variants={fadeInUp} className="h-full">
-                <Card className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 glassmorphic dark:bg-gray-800/60 border-transparent hover:border-purple-500">
-                  <div className="relative h-56 w-full overflow-hidden">
-                    <img   
-                      alt={jurusan.image || `Ilustrasi ${jurusan.name}`} 
-                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      src="https://images.unsplash.com/photo-1696041757866-f19a8e46fab1" />
-                    <div className={`absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-gray-900/80 shadow-md ${jurusan.color}`}>
-                     {IconComponent && <IconComponent className="w-8 h-8" />}
-                    </div>
-                  </div>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-2xl font-bold text-gray-800 dark:text-white">{jurusan.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <CardDescription className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
-                      {jurusan.description}
-                    </CardDescription>
-                  </CardContent>
-                 
-                </Card>
-              </motion.div>
-              );
-            })}
           </motion.div>
         </div>
       );

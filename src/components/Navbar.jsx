@@ -14,7 +14,7 @@ import React, { useState } from 'react';
     const mainNavLinks = [
       { href: '/', label: 'Beranda', icon: BookOpen },
       { href: '/jurusan', label: 'Jurusan', icon: Users },
-      { href: '/postingan', label: 'Postingan', icon: Newspaper },
+      { href: '/postingan', label: 'Berita', icon: Newspaper },
       { href: '/kontak', label: 'Kontak', icon: Phone },
     ];
 

@@ -1,10 +1,32 @@
+import { useState, useEffect } from 'react';
     import { motion } from 'framer-motion';
     import { Button } from '@/components/ui/button';
     import { Link } from 'react-router-dom';
     import { ArrowRight, BookOpen, Users, Newspaper, Award, Building, Lightbulb } from 'lucide-react';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+    import { jurusanAPI } from '@/services/api';
 
     const HomePage = () => {
+      const [jurusanList, setJurusanList] = useState([]);
+      const [isLoading, setIsLoading] = useState(true);
+
+      useEffect(() => {
+        const loadJurusan = async () => {
+          try {
+            const result = await jurusanAPI.getAll();
+            if (result.status === 'success') {
+              setJurusanList(result.data);
+            }
+          } catch (error) {
+            console.error('Failed to load jurusan:', error);
+          } finally {
+            setIsLoading(false);
+          }
+        };
+
+        loadJurusan();
+      }, []);
+
       const fadeInUp = {
         initial: { opacity: 0, y: 60 },
         animate: { opacity: 1, y: 0 },
@@ -26,12 +48,6 @@
         { title: "Ekstrakurikuler Beragam", description: "Kembangkan bakat dan minat melalui berbagai kegiatan.", icon: Award, color: "text-emerald-500" },
         { title: "Lingkungan Belajar Kondusif", description: "Suasana belajar yang aman, nyaman, dan inspiratif.", icon: Lightbulb, color: "text-yellow-500" },
         { title: "Berita & Kegiatan Terkini", description: "Informasi terbaru seputar kegiatan dan prestasi sekolah.", icon: Newspaper, color: "text-rose-500" },
-      ];
-
-      const jurusanUnggulan = [
-        { name: "Akuntansi dan Keuangan Lembaga", image: "Jurusan Akuntansi", description: "Mempelajari pengelolaan keuangan dan akuntansi profesional." },
-        { name: "Teknik Komputer Jaringan", image: "Jurusan TKJ", description: "Menguasai instalasi, konfigurasi, dan troubleshooting jaringan komputer." },
-        { name: "Rekayasa Perangkat Lunak dan Gim", image: "Jurusan RPLG", description: "Mengembangkan aplikasi perangkat lunak dan game inovatif." },
       ];
 
       return (
@@ -123,30 +139,62 @@
               </motion.p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              {jurusanUnggulan.map((jurusan, index) => (
-                <motion.div key={index} variants={fadeInUp}>
-                  <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group h-full flex flex-col">
-                    <div className="relative h-56">
-                      <img   
-                        alt={jurusan.image} 
-                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        src="https://images.unsplash.com/photo-1620886434979-5cc4ddc31858" />
-                      <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-opacity duration-300"></div>
-                    </div>
-                    <CardContent className="p-6 flex-grow flex flex-col justify-between">
-                      <div>
-                        <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white mb-2">{jurusan.name}</CardTitle>
-                        <CardDescription className="text-gray-600 dark:text-gray-300 mb-4">{jurusan.description}</CardDescription>
-                      </div>
-                      <Button asChild variant="link" className="text-purple-600 dark:text-purple-400 p-0 self-start hover:underline">
+              {isLoading ? (
+                <p className="text-center col-span-3">Memuat data jurusan...</p>
+              ) : (
+                <>
+                  {jurusanList.slice(0, 3).map((jurusan, index) => (
+                    <motion.div key={jurusan.id} variants={fadeInUp}>
+                      <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group h-full flex flex-col">
+                        <div className="relative h-56">
+                          {jurusan.image ? (
+                            <img   
+                              alt={`Jurusan ${jurusan.name}`} 
+                              className="w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
+                              src={jurusan.image.startsWith('data:') ? jurusan.image : `data:image/jpeg;base64,${jurusan.image}`}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                              <jurusan.icon className="w-16 h-16 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-6 flex-grow flex flex-col justify-between">
+                          <div>
+                            <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                              {jurusan.name}
+                            </CardTitle>
+                            <CardDescription className="text-gray-600 dark:text-gray-300 mb-4">
+                              {jurusan.description}
+                            </CardDescription>
+                          </div>
+                          <Button asChild variant="link" className="text-purple-600 dark:text-purple-400 p-0 self-start hover:underline">
+                            <Link to="/jurusan">
+                              Pelajari Lebih Lanjut <ArrowRight className="ml-1 h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                  {jurusanList.length > 3 && (
+                    <motion.div 
+                      className="md:col-span-3 flex justify-center mt-8" 
+                      variants={fadeInUp}
+                    >
+                      <Button 
+                        asChild 
+                        size="lg" 
+                        className="bg-purple-600 text-white hover:bg-purple-700 shadow-lg transition-transform hover:scale-105"
+                      >
                         <Link to="/jurusan">
-                          Pelajari Lebih Lanjut <ArrowRight className="ml-1 h-4 w-4" />
+                          Lihat Semua Jurusan <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
                       </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  )}
+                </>
+              )}
             </div>
           </motion.section>
 
