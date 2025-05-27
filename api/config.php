@@ -14,6 +14,7 @@ $username = 'root';
 $password = '';
 $charset = 'utf8mb4';
 
+date_default_timezone_set('Asia/Jakarta');
 
 // Database connection with error handling
 try {

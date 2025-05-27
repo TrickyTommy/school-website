@@ -43,17 +43,9 @@ import React, { useState, useEffect } from 'react';
         }
       };
 
-      const filteredPostingan = postinganList.filter(post => {
-        // Fix filtering logic
-        if (filter === 'semua') return true;
-        return post.type.toLowerCase() === filter.toLowerCase();
-      });
-
-      // Add proper logging to debug filter
-      useEffect(() => {
-        console.log('Current filter:', filter);
-        console.log('Filtered posts:', filteredPostingan);
-      }, [filter, postinganList]);
+      const filteredPostingan = postinganList.filter(post => 
+        filter === 'semua' || post.type === filter
+      );
 
       const fadeInUp = {
         initial: { opacity: 0, y: 60 },
@@ -71,58 +63,14 @@ import React, { useState, useEffect } from 'react';
       
      
 
-      const handlePostClick = (post) => {
-        // Pass the entire post object instead of just ID
-        navigate(`/postingan/detail/${post.id}`, {
-          state: { post } // Pass post data through navigation state
-        });
+      const handlePostClick = (postId) => {
+        navigate(`/postingan/detail/${postId}`);
       };
 
       const getPostIcon = (type) => {
         if (type === 'berita') return <Newspaper className="w-5 h-5 mr-2 text-blue-500" />;
         if (type === 'foto') return <ImageIcon className="w-5 h-5 mr-2 text-green-500" />;
         if (type === 'video') return <Video className="w-5 h-5 mr-2 text-red-500" />;
-        return null;
-      };
-
-      const getYouTubeEmbedUrl = (url) => {
-        try {
-          let videoId;
-          if (url.includes('youtube.com/watch?v=')) {
-            videoId = url.split('v=')[1].split('&')[0];
-          } else if (url.includes('youtu.be/')) {
-            videoId = url.split('youtu.be/')[1].split('?')[0];
-          }
-          return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-        } catch (error) {
-          console.error('Invalid YouTube URL:', error);
-          return null;
-        }
-      };
-
-      const VideoContent = ({ post }) => {
-        if (post.videoUrl && post.videoUrl.includes('youtube')) {
-          const embedUrl = getYouTubeEmbedUrl(post.videoUrl);
-          if (!embedUrl) return null;
-          
-          return (
-            <iframe
-              src={embedUrl}
-              title={post.title}
-              className="absolute top-0 left-0 w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          );
-        } else if (post.video) {
-          return (
-            <video
-              src={post.video}
-              controls
-              className="absolute top-0 left-0 w-full h-full object-contain"
-            />
-          );
-        }
         return null;
       };
 
@@ -142,21 +90,14 @@ import React, { useState, useEffect } from 'react';
 
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div className="flex space-x-2 bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
-              {['semua', 'berita', 'foto', 'video'].map(filterType => (
+              {['semua', 'berita', 'foto', 'video'].map(type => (
                 <Button
-                  key={filterType}
-                  variant={filter === filterType ? 'default' : 'ghost'}
-                  onClick={() => {
-                    console.log('Setting filter to:', filterType); // Debug log
-                    setFilter(filterType);
-                  }}
-                  className={`capitalize transition-all duration-200 ${
-                    filter === filterType 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
+                  key={type}
+                  variant={filter === type ? 'default' : 'ghost'}
+                  onClick={() => setFilter(type)}
+                  className={`capitalize transition-all duration-200 ${filter === type ? 'bg-primary text-primary-foreground' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
-                  {filterType}
+                  {type}
                 </Button>
               ))}
             </div>
@@ -188,18 +129,24 @@ import React, { useState, useEffect } from 'react';
                 <motion.div key={post.id} variants={fadeInUp} className="h-full">
                   <Card 
                     className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60 cursor-pointer"
-                    onClick={() => handlePostClick(post)}
+                    onClick={() => handlePostClick(post.id)}
                   >
-                    {(post.image || post.video || post.videoUrl) && (
-                      <div className="relative w-full pt-[56.25%] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    {(post.image || post.videoUrl) && (
+                      <div className="relative h-56 w-full overflow-hidden">
                         {post.image ? (
                           <img   
                             alt={post.title} 
-                            className="absolute top-0 left-0 w-full h-full object-contain"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             src={post.image}
                           />
-                        ) : (
-                          <VideoContent post={post} />
+                        ) : post.videoUrl && (
+                          <div className="w-full h-full">
+                            <video 
+                              src={post.videoUrl} 
+                              controls
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         )}
                       </div>
                     )}

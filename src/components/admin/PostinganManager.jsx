@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { API_ENDPOINTS } from '@/services/api';
+import { Progress } from "@/components/ui/progress";
 
 export default function PostinganManager() {
   const [posts, setPosts] = useState([]);
@@ -28,6 +29,7 @@ export default function PostinganManager() {
     videoUrl: '',
     video: null
   });
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     loadPosts();
@@ -60,96 +62,183 @@ export default function PostinganManager() {
 
   const handleFileSelect = async (file) => {
     try {
-      const base64String = await convertToBase64(file);
+      // Validate file size (100MB max)
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      if (file.size > maxSize) {
+        toast({
+          title: "Error",
+          description: "Ukuran file terlalu besar. Maksimal 100MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
       setUploadedFile(file);
-      
-      // Determine file type and handle accordingly
       const isVideo = file.type.startsWith('video/');
+      
+      // Create preview URL
       const preview = {
         type: isVideo ? 'video' : 'image',
-        url: base64String
+        url: URL.createObjectURL(file)
       };
       
       setFilePreview(preview);
       setFormData(prev => ({
         ...prev,
-        [isVideo ? 'video' : 'image']: base64String,
-        [isVideo ? 'image' : 'video']: null
+        type: isVideo ? 'video' : 'foto'
       }));
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to process file",
+        description: "Gagal memproses file: " + error.message,
         variant: "destructive"
       });
     }
   };
 
-  const getYouTubeEmbedUrl = (url) => {
+  const getVideoEmbedUrl = (url) => {
+    if (!url) return null;
+    
     try {
-      let videoId;
-      // Handle different YouTube URL formats
-      if (url.includes('youtube.com/watch?v=')) {
-        videoId = url.split('v=')[1].split('&')[0];
-      } else if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1].split('?')[0];
+      const urlObj = new URL(url);
+      
+      // Make sure we have a valid protocol
+      if (!urlObj.protocol.startsWith('http')) {
+        throw new Error('URL harus dimulai dengan http:// atau https://');
       }
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+
+      // Handle different video platforms
+      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+        const videoId = urlObj.hostname.includes('youtube.com') 
+          ? urlObj.searchParams.get('v')
+          : urlObj.pathname.slice(1);
+        if (!videoId) throw new Error('ID Video YouTube tidak ditemukan');
+        return {
+          type: 'youtube',
+          embedUrl: `https://www.youtube.com/embed/${videoId}`,
+          originalUrl: url
+        };
+      }
+      
+      // For other URLs, try to load as generic embed with fallback
+      return {
+        type: 'generic',
+        embedUrl: url,
+        originalUrl: url
+      };
     } catch (error) {
-      console.error('Invalid YouTube URL:', error);
+      console.error('Video URL Error:', error);
       return null;
     }
   };
 
-  const validateYouTubeUrl = (url) => {
-    const embedUrl = getYouTubeEmbedUrl(url);
-    return !!embedUrl;
+  const VideoEmbed = ({ url, title }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
+    const embedInfo = getVideoEmbedUrl(url);
+
+    if (!embedInfo) {
+      return (
+        <div className="p-4 text-amber-600 bg-amber-50 border border-amber-200 rounded">
+          URL video tidak valid
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full h-0 pb-[56.25%]">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        )}
+        {hasError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-red-50 text-red-600 text-sm">
+            Gagal memuat video
+          </div>
+        )}
+        <iframe
+          src={embedInfo.embedUrl}
+          title={title || "Video"}
+          className={`absolute top-0 left-0 w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={() => setIsLoading(false)}
+          onError={() => {
+            setIsLoading(false);
+            setHasError(true);
+          }}
+          frameBorder="0"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    );
+  };
+
+  const validateVideoUrl = (url) => {
+    const embedInfo = getVideoEmbedUrl(url);
+    return !!embedInfo;
   };
 
   const handleVideoUrlChange = (e) => {
     const url = e.target.value;
-    if (!url || validateYouTubeUrl(url)) {
-      setFormData({ ...formData, videoUrl: url });
-    } else {
-      toast({
-        title: "Error",
-        description: "URL YouTube tidak valid",
-        variant: "destructive"
-      });
-    }
+    setFormData(prev => ({ ...prev, videoUrl: url }));
   };
 
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
+      setUploadProgress(0);
+
+      const formDataToSend = new FormData();
+      
+      // Add basic form data
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('content', formData.content);
+      formDataToSend.append('type', formData.type);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('id', `post_${Date.now()}`);
+
+      // Handle video URL
+      if (formData.videoUrl) {
+        formDataToSend.append('videoUrl', formData.videoUrl);
+      }
+
+      // Handle file upload (video or image)
+      if (uploadedFile) {
+        formDataToSend.append('file', uploadedFile);
+      }
+
       const response = await fetch(API_ENDPOINTS.postingan, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          id: `post_${Date.now()}`
-        })
+        body: formDataToSend,
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
       if (result.status === 'success') {
         await loadPosts();
         resetForm();
         toast({
-          title: "Success",
-          description: "Post created successfully"
+          title: "Berhasil",
+          description: "Postingan telah dibuat"
         });
       } else {
-        throw new Error(result.message);
+        throw new Error(result.message || 'Failed to create post');
       }
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save post",
+        description: error.message || "Gagal menyimpan postingan",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -193,22 +282,16 @@ export default function PostinganManager() {
     setEditingPost(null);
   };
 
-  const YouTubeEmbed = ({ url, title }) => {
-    const embedUrl = getYouTubeEmbedUrl(url);
-    if (!embedUrl) return null;
-
-    return (
-      <div className="relative w-full h-full">
-        <iframe
-          src={embedUrl}
-          title={title || "YouTube video"}
-          className="absolute top-0 left-0 w-full h-full rounded-lg"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    );
+  const renderUploadProgress = () => {
+    if (uploadProgress > 0 && uploadProgress < 100) {
+      return (
+        <div className="w-full space-y-2">
+          <Progress value={uploadProgress} className="w-full" />
+          <p className="text-sm text-gray-500 text-center">{uploadProgress}% Uploaded</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -265,15 +348,15 @@ export default function PostinganManager() {
 
               {formData.type === 'video' && (
                 <div className="space-y-2">
-                  <Label>URL Video YouTube</Label>
+                  <Label>URL Video</Label>
                   <Input
                     value={formData.videoUrl}
                     onChange={handleVideoUrlChange}
-                    placeholder="https://youtube.com/watch?v=..."
+                    placeholder="Masukkan URL video"
                   />
-                  {formData.videoUrl && validateYouTubeUrl(formData.videoUrl) && (
-                    <div className="mt-2 aspect-video">
-                      <YouTubeEmbed url={formData.videoUrl} />
+                  {formData.videoUrl && (
+                    <div className="mt-2 border rounded-lg overflow-hidden">
+                      <VideoEmbed url={formData.videoUrl} />
                     </div>
                   )}
                 </div>
@@ -299,16 +382,19 @@ export default function PostinganManager() {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 sticky bottom-0 bg-background pt-4 mt-4 border-t">
-            <Button variant="outline" onClick={() => {
-              setIsDialogOpen(false);
-              resetForm();
-            }}>
-              Batal
-            </Button>
-            <Button onClick={handleSubmit} disabled={isLoading}>
-              {editingPost ? 'Perbarui' : 'Buat'} Postingan
-            </Button>
+          <div className="flex flex-col space-y-4 sticky bottom-0 bg-background pt-4 mt-4 border-t">
+            {renderUploadProgress()}
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => {
+                setIsDialogOpen(false);
+                resetForm();
+              }}>
+                Batal
+              </Button>
+              <Button onClick={handleSubmit} disabled={isLoading}>
+                {editingPost ? 'Perbarui' : 'Buat'} Postingan
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -321,7 +407,7 @@ export default function PostinganManager() {
                 {post.type === 'video' && (post.video || post.videoUrl) && (
                   <div className="w-32 h-20 bg-gray-100 rounded overflow-hidden">
                     {post.videoUrl ? (
-                      <YouTubeEmbed url={post.videoUrl} title={post.title} />
+                      <VideoEmbed url={post.videoUrl} title={post.title} />
                     ) : (
                       <video
                         src={post.video}
