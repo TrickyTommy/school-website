@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CalendarDays, UserCircle, Tag } from 'lucide-react';
@@ -9,13 +9,19 @@ import { API_ENDPOINTS } from '@/services/api';
 export default function PostDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [post, setPost] = useState(null);
+  const [post, setPost] = useState(location.state?.post || null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadPostDetail();
-  }, [id]);
+    if (!post) {
+      // Only fetch if we don't have post data from navigation
+      loadPostDetail(id);
+    } else {
+      setLoading(false);
+    }
+  }, [id, post]);
 
   const loadPostDetail = async () => {
     try {

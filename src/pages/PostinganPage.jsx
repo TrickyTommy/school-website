@@ -43,9 +43,17 @@ import React, { useState, useEffect } from 'react';
         }
       };
 
-      const filteredPostingan = postinganList.filter(post => 
-        filter === 'semua' || post.type === filter
-      );
+      const filteredPostingan = postinganList.filter(post => {
+        // Fix filtering logic
+        if (filter === 'semua') return true;
+        return post.type.toLowerCase() === filter.toLowerCase();
+      });
+
+      // Add proper logging to debug filter
+      useEffect(() => {
+        console.log('Current filter:', filter);
+        console.log('Filtered posts:', filteredPostingan);
+      }, [filter, postinganList]);
 
       const fadeInUp = {
         initial: { opacity: 0, y: 60 },
@@ -61,24 +69,13 @@ import React, { useState, useEffect } from 'react';
         }
       };
       
-      const handleAddPostingan = () => {
-        toast({ title: "Info", description: "Fitur tambah postingan akan tersedia di halaman Admin." });
-      };
+     
 
-      const handleEditPostingan = (id) => {
-        toast({ title: "Info", description: `Fitur edit postingan (ID: ${id}) akan tersedia di halaman Admin.` });
-      };
-
-      const handleDeletePostingan = (id) => {
-        toast({
-          variant: "destructive",
-          title: "Konfirmasi Hapus",
-          description: `Fitur hapus postingan (ID: ${id}) akan tersedia di halaman Admin.`,
+      const handlePostClick = (post) => {
+        // Pass the entire post object instead of just ID
+        navigate(`/postingan/detail/${post.id}`, {
+          state: { post } // Pass post data through navigation state
         });
-      };
-
-      const handlePostClick = (postId) => {
-        navigate(`/postingan/detail/${postId}`);
       };
 
       const getPostIcon = (type) => {
@@ -104,14 +101,21 @@ import React, { useState, useEffect } from 'react';
 
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div className="flex space-x-2 bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
-              {['semua', 'berita', 'foto', 'video'].map(type => (
+              {['semua', 'berita', 'foto', 'video'].map(filterType => (
                 <Button
-                  key={type}
-                  variant={filter === type ? 'default' : 'ghost'}
-                  onClick={() => setFilter(type)}
-                  className={`capitalize transition-all duration-200 ${filter === type ? 'bg-primary text-primary-foreground' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  key={filterType}
+                  variant={filter === filterType ? 'default' : 'ghost'}
+                  onClick={() => {
+                    console.log('Setting filter to:', filterType); // Debug log
+                    setFilter(filterType);
+                  }}
+                  className={`capitalize transition-all duration-200 ${
+                    filter === filterType 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
                 >
-                  {type}
+                  {filterType}
                 </Button>
               ))}
             </div>
@@ -143,7 +147,7 @@ import React, { useState, useEffect } from 'react';
                 <motion.div key={post.id} variants={fadeInUp} className="h-full">
                   <Card 
                     className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60 cursor-pointer"
-                    onClick={() => handlePostClick(post.id)}
+                    onClick={() => handlePostClick(post)} // Pass entire post object
                   >
                     {(post.image || post.videoUrl) && (
                       <div className="relative h-56 w-full overflow-hidden">
