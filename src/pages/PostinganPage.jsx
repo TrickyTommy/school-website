@@ -147,22 +147,22 @@ import React, { useState, useEffect } from 'react';
                 <motion.div key={post.id} variants={fadeInUp} className="h-full">
                   <Card 
                     className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60 cursor-pointer"
-                    onClick={() => handlePostClick(post)} // Pass entire post object
+                    onClick={() => handlePostClick(post)}
                   >
                     {(post.image || post.videoUrl) && (
-                      <div className="relative h-56 w-full overflow-hidden">
+                      <div className="relative w-full pt-[56.25%] overflow-hidden"> {/* 16:9 aspect ratio container */}
                         {post.image ? (
                           <img   
                             alt={post.title} 
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            className="absolute top-0 left-0 w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
                             src={post.image}
                           />
                         ) : post.videoUrl && (
-                          <div className="w-full h-full">
+                          <div className="absolute top-0 left-0 w-full h-full">
                             <video 
                               src={post.videoUrl} 
                               controls
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
                             />
                           </div>
                         )}

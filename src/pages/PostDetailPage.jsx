@@ -76,11 +76,11 @@ export default function PostDetailPage() {
 
       <Card className="overflow-hidden">
         {post?.image && (
-          <div className="w-full h-[400px]">
+          <div className="relative w-full h-auto max-h-[80vh] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <img 
               src={post.image.startsWith('data:') ? post.image : `data:image/jpeg;base64,${post.image}`}
               alt={post.title}
-              className="w-full h-full object-cover"
+              className="max-w-full max-h-[80vh] object-contain"
               onError={(e) => {
                 console.error('Image load error:', e);
                 e.target.style.display = 'none';

@@ -89,22 +89,19 @@ const ProfilGuruStaffPage = () => {
   const renderMemberDetail = (member) => {
     return (
       <div className="space-y-6">
-        {/* Full size image */}
-        <div className="relative w-full h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+        <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center min-h-[400px]">
           {member.image ? (
             <img
               src={getImageUrl(member.image)}
               alt={member.name}
-              className="w-full h-full object-contain"
+              className="max-w-full max-h-[60vh] object-contain"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = 'https://via.placeholder.com/150';
               }}
             />
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <UserCircle className="w-32 h-32 text-gray-400" />
-            </div>
+            <UserCircle className="w-32 h-32 text-gray-400" />
           )}
         </div>
         
@@ -189,11 +186,11 @@ const ProfilGuruStaffPage = () => {
                   <motion.div key={leader.id} variants={fadeInUp} className="md:col-span-4">
                     <Card onClick={() => handleMemberClick(leader)} className="cursor-pointer shadow-md hover:shadow-lg transition-shadow duration-300 glassmorphic dark:bg-gray-800/50 overflow-hidden border border-primary">
                       <div className="flex flex-col">
-                        <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-700">
+                        <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                           {leader.image ? (
                             <img   
                               alt={leader.name} 
-                              className="w-full h-full object-cover" 
+                              className="max-w-full h-full object-contain" 
                               src={getImageUrl(leader.image)}
                               onError={(e) => {
                                 e.target.onerror = null;
@@ -248,11 +245,11 @@ const ProfilGuruStaffPage = () => {
                           onClick={() => handleMemberClick(leader)} 
                           className="cursor-pointer h-full shadow-md hover:shadow-lg transition-shadow duration-300"
                         >
-                          <div className="relative h-40 bg-gray-200 dark:bg-gray-700">
+                          <div className="relative h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                             {leader.image ? (
                               <img   
                                 alt={leader.name} 
-                                className="w-full h-full object-cover" 
+                                className="max-w-full h-full object-contain" 
                                 src={getImageUrl(leader.image)}
                                 onError={(e) => {
                                   e.target.onerror = null;
@@ -300,11 +297,11 @@ const ProfilGuruStaffPage = () => {
                       <motion.div key={leader.id} variants={fadeInUp}>
                         <Card onClick={() => handleMemberClick(leader)} className="cursor-pointer shadow-md hover:shadow-lg transition-shadow duration-300 glassmorphic dark:bg-gray-800/50 overflow-hidden border border-primary">
                           <div className="flex flex-col">
-                            <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-700">
+                            <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                               {leader.image ? (
                                 <img   
                                   alt={leader.name} 
-                                  className="w-full h-full object-cover" 
+                                  className="max-w-full h-full object-contain" 
                                   src={getImageUrl(leader.image)}
                                   onError={(e) => {
                                     e.target.onerror = null;
@@ -358,11 +355,11 @@ const ProfilGuruStaffPage = () => {
                 {teachers.map((teacher) => (
                   <motion.div key={teacher.id} variants={fadeInUp}>
                     <Card onClick={() => handleMemberClick(teacher)} className="cursor-pointer h-full shadow-md hover:shadow-lg transition-shadow duration-300">
-                      <div className="relative h-40 bg-gray-200 dark:bg-gray-700">
+                      <div className="relative h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                         {teacher.image ? (
                           <img   
                             alt={teacher.name} 
-                            className="w-full h-full object-cover" 
+                            className="max-w-full h-full object-contain" 
                             src={getImageUrl(teacher.image)}
                             onError={(e) => {
                               e.target.onerror = null;
@@ -421,7 +418,7 @@ const ProfilGuruStaffPage = () => {
                        <div className="relative h-56 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                          <img   
                           alt={person.name} 
-                          className="w-full h-full object-cover" 
+                          className="max-w-full h-full object-contain" 
                           src={getImageUrl(person.image)}
                           onError={(e) => {
                             e.target.onerror = null;
