@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost/sekolah/api';
-// const BASE_URL = 'https://floralwhite-wildcat-164447.hostingersite.com/';
 
 export const API_ENDPOINTS = {
     postingan: `${BASE_URL}/postingan.php`,
