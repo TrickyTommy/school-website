@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
     import JurusanManager from '@/components/admin/JurusanManager';
     import PostinganManager from '@/components/admin/PostinganManager';
     import TeacherStaffManager from '@/components/admin/TeacherStaffManager';
+    import PrincipalsManager from '@/components/admin/PrincipalsManager';
     import { Briefcase, Cpu, Code } from 'lucide-react';
 
     export const initialJurusanIcons = { Briefcase, Cpu, Code };
@@ -76,10 +77,11 @@ import React, { useState, useEffect } from 'react';
           </motion.section>
 
           <Tabs defaultValue="jurusan" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg">
+            <TabsList className="grid w-full grid-cols-4 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg">
               <TabsTrigger value="jurusan" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md py-2.5">Kelola Jurusan</TabsTrigger>
               <TabsTrigger value="postingan" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md py-2.5">Kelola Postingan</TabsTrigger>
               <TabsTrigger value="staff" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md py-2.5">Kelola Guru & Staff</TabsTrigger>
+              <TabsTrigger value="principals" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md py-2.5">Kelola Kepala Sekolah</TabsTrigger>
             </TabsList>
 
             <TabsContent value="jurusan" className="mt-6">
@@ -105,6 +107,12 @@ import React, { useState, useEffect } from 'react';
             <TabsContent value="staff" className="mt-6">
               <motion.div variants={fadeInUp} initial="initial" animate="animate">
                 <TeacherStaffManager />
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="principals" className="mt-6">
+              <motion.div variants={fadeInUp} initial="initial" animate="animate">
+                <PrincipalsManager />
               </motion.div>
             </TabsContent>
           </Tabs>

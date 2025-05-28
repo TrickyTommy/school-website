@@ -6,7 +6,8 @@ const BASE_URL = 'http://localhost/sekolah/api';
 export const API_ENDPOINTS = {
     postingan: `${BASE_URL}/postingan.php`,
     guruStaff: `${BASE_URL}/guru_staff.php`,
-    jurusan: `${BASE_URL}/jurusan.php`  // Add this line
+    jurusan: `${BASE_URL}/jurusan.php`,
+    principals: `${BASE_URL}/principals.php`
 };
 
 // Cache configuration
@@ -260,4 +261,60 @@ export const jurusanAPI = {
             throw error;
         }
     }
+};
+
+export const principalsAPI = {
+  getAll: async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.principals);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      return result;
+    } catch (error) {
+      throw new Error('Failed to fetch principals: ' + error.message);
+    }
+  },
+
+  create: async (data) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.principals, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      return result;
+    } catch (error) {
+      throw new Error('Failed to create principal: ' + error.message);
+    }
+  },
+
+  update: async (data) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.principals}/${data.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      return result;
+    } catch (error) {
+      throw new Error('Failed to update principal: ' + error.message);
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.principals}/${id}`, {
+        method: 'DELETE'
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      return result;
+    } catch (error) {
+      throw new Error('Failed to delete principal: ' + error.message);
+    }
+  }
 };

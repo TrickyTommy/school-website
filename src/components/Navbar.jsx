@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
     import { Link, NavLink } from 'react-router-dom';
     import { motion } from 'framer-motion';
-    import { Menu, X, Sun, Moon, BookOpen, Users, Newspaper, Phone, ShieldCheck, Info, ChevronDown, Eye, Target, UserSquare } from 'lucide-react';
+    import { Menu, X, Sun, Moon, BookOpen, Users, Newspaper, Phone, ShieldCheck, Info, ChevronDown, Eye, Target, UserSquare, History } from 'lucide-react';
     import { Button } from '@/components/ui/button';
     import { useTheme } from '@/components/ThemeProvider';
     import {
@@ -22,6 +22,7 @@ import React, { useState } from 'react';
       { href: '/profil/visi-misi', label: 'Visi Misi', icon: Target },
       { href: '/profil/tentang-kami', label: 'Tentang Kami', icon: Info },
       { href: '/profil/guru-staff', label: 'Guru & Staff', icon: UserSquare },
+      { href: '/profil/sejarah-kepsek', label: 'Sejarah Kepala Sekolah', icon: History },
     ];
     
     const adminLink = { href: '/admin', label: 'Admin', icon: ShieldCheck };

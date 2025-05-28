@@ -10,6 +10,7 @@ import React from 'react';
     import ProfilVisiMisiPage from '@/pages/ProfilVisiMisiPage';
     import ProfilTentangKamiPage from '@/pages/ProfilTentangKamiPage';
     import ProfilGuruStaffPage from '@/pages/ProfilGuruStaffPage';
+    import ProfilSejarahKepsekPage from '@/pages/ProfilSejarahKepsekPage';
     import { Toaster } from '@/components/ui/toaster';
     import { ThemeProvider } from '@/components/ThemeProvider';
     import PostDetailPage from '@/pages/PostDetailPage';
@@ -30,6 +31,7 @@ import React from 'react';
                   <Route path="/profil/visi-misi" element={<ProfilVisiMisiPage />} />
                   <Route path="/profil/tentang-kami" element={<ProfilTentangKamiPage />} />
                   <Route path="/profil/guru-staff" element={<ProfilGuruStaffPage />} />
+                  <Route path="/profil/sejarah-kepsek" element={<ProfilSejarahKepsekPage />} />
                   <Route path="/postingan/:id" element={<PostDetailPage />} />
                   <Route path="/postingan/detail/:id" element={<PostDetailPage />} />
                 </Routes>
