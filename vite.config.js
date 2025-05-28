@@ -199,6 +199,7 @@ export default defineConfig({
 	},
 	build: {
 		chunkSizeWarningLimit: 1000,
+		sourcemap: true, // Enable source maps for better debugging
 		rollupOptions: {
 			output: {
 				manualChunks(id) {
@@ -209,9 +210,16 @@ export default defineConfig({
 				manualChunks: {
 					vendor: ['react', 'react-dom', 'framer-motion'],
 					ui: ['@/components/ui'],
-				}
+				},
+				// Add hash to filenames for cache busting
+				entryFileNames: 'assets/[name].[hash].js',
+				chunkFileNames: 'assets/[name].[hash].js',
+				assetFileNames: 'assets/[name].[hash].[ext]',
 			}
 		},
+		// Optimize CSS output
+		cssCodeSplit: true,
+		cssMinify: true,
 		minify: 'terser',
 		terserOptions: {
 			compress: {
