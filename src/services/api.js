@@ -7,7 +7,8 @@ export const API_ENDPOINTS = {
     postingan: `${BASE_URL}/postingan.php`,
     guruStaff: `${BASE_URL}/guru_staff.php`,
     jurusan: `${BASE_URL}/jurusan.php`,
-    principals: `${BASE_URL}/principals.php`
+    principals: `${BASE_URL}/principals.php`,
+    registration: `${BASE_URL}/registration.php`,
 };
 
 // Cache configuration
@@ -315,6 +316,34 @@ export const principalsAPI = {
       return result;
     } catch (error) {
       throw new Error('Failed to delete principal: ' + error.message);
+    }
+  }
+};
+
+export const registrationAPI = {
+  getSettings: async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.registration);
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching registration settings:', error);
+      throw error;
+    }
+  },
+
+  updateSettings: async (data) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.registration, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    } catch (error) {
+      console.error('Error updating registration settings:', error);
+      throw error;
     }
   }
 };

@@ -14,6 +14,7 @@ import React from 'react';
     import { Toaster } from '@/components/ui/toaster';
     import { ThemeProvider } from '@/components/ThemeProvider';
     import PostDetailPage from '@/pages/PostDetailPage';
+    import PendaftaranPage from '@/pages/PendaftaranPage';
 
     function App() {
       return (
@@ -34,6 +35,7 @@ import React from 'react';
                   <Route path="/profil/sejarah-kepsek" element={<ProfilSejarahKepsekPage />} />
                   <Route path="/postingan/:id" element={<PostDetailPage />} />
                   <Route path="/postingan/detail/:id" element={<PostDetailPage />} />
+                  <Route path="/pendaftaran" element={<PendaftaranPage />} />
                 </Routes>
               </main>
               <Footer />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
     import { Link, NavLink } from 'react-router-dom';
     import { motion } from 'framer-motion';
-    import { Menu, X, Sun, Moon, BookOpen, Users, Newspaper, Phone, ShieldCheck, Info, ChevronDown, Eye, Target, UserSquare, History } from 'lucide-react';
+    import { Menu, X, Sun, Moon, BookOpen, Users, Newspaper, Phone, ShieldCheck, Info, ChevronDown, Eye, Target, UserSquare, History, UserPlus } from 'lucide-react';
     import { Button } from '@/components/ui/button';
     import { useTheme } from '@/components/ThemeProvider';
     import {
@@ -15,6 +15,7 @@ import React, { useState } from 'react';
       { href: '/', label: 'Beranda', icon: BookOpen },
       { href: '/jurusan', label: 'Jurusan', icon: Users },
       { href: '/postingan', label: 'Berita', icon: Newspaper },
+      { href: '/pendaftaran', label: 'Pendaftaran', icon: UserPlus },
       { href: '/kontak', label: 'Kontak', icon: Phone },
     ];
 
