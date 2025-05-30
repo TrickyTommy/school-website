@@ -22,7 +22,7 @@ import React from 'react';
         {
           icon: History,
           title: "Sejarah Singkat",
-          content: "SMK Budi Mulia Karawang didirikan pada tahun YYYY dengan komitmen untuk menyediakan pendidikan kejuruan berkualitas yang relevan dengan kebutuhan industri. Sejak awal pendiriannya, sekolah kami terus berkembang dan berinovasi untuk mencetak lulusan yang siap kerja dan berkarakter.",
+          content: "SMK Budi Mulia Karawang didirikan pada tahun 2013 dengan komitmen untuk menyediakan pendidikan kejuruan berkualitas yang relevan dengan kebutuhan industri. Sejak awal pendiriannya, sekolah kami terus berkembang dan berinovasi untuk mencetak lulusan yang siap kerja dan berkarakter.",
           image: "Foto arsip gedung sekolah lama atau momen pendirian"
         },
         {
