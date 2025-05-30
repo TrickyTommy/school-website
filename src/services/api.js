@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost/sekolah/api';
-// const BASE_URL = 'https://floralwhite-wildcat-164447.hostingersite.com/';
+// const BASE_URL = 'http://localhost/sekolah/api';
 
 export const API_ENDPOINTS = {
     postingan: `${BASE_URL}/postingan.php`,
@@ -308,8 +307,9 @@ export const principalsAPI = {
 
   delete: async (id) => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.principals}/${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_ENDPOINTS.principals}?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
