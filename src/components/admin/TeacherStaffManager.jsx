@@ -304,11 +304,11 @@ export default function TeacherStaffManager() {
                       required
                     >
                       <option value="">Pilih Bidang</option>
-                      <option value="kurikulum">Kurikulum</option>
-                      <option value="kesiswaan">Kesiswaan</option>
-                      <option value="sarana">Sarana & Prasarana</option>
-                      <option value="humas">Hubungan Masyarakat</option>
-                      <option value="bendahara">Bendahara</option>
+                      <option value="Kurikulum">Kurikulum</option>
+                      <option value="Kesiswaan">Kesiswaan</option>
+                      <option value="Sarana & Prasarana">Sarana & Prasarana</option>
+                      <option value="Hubungan Masyarakat">Hubungan Masyarakat</option>
+                      <option value="Bendahara">Bendahara</option>
                     </select>
                   </div>
                 )}

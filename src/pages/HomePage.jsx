@@ -59,7 +59,11 @@ import { useState, useEffect } from 'react';
                 transition={{ duration: 0.8 }}
                 >
                 <div className="absolute inset-0 opacity-20">
-                  <img  alt="Gedung sekolah SMK Budi Mulia Karawang" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1632466722833-568a49d7b1f7" />
+                  <img 
+                    alt="Gedung sekolah SMK Budi Mulia Karawang " 
+                    className="w-full h-full object-cover" 
+                    src="\public\gedung-sekolah.png" 
+                  />
                 </div>
                 <div className="container mx-auto px-4 text-center relative z-10">
                   <motion.h1 
@@ -72,19 +76,27 @@ import { useState, useEffect } from 'react';
                   <span className="block">SMK Budi Mulia</span>
                   <span className="block">Karawang</span>
                   </motion.h1>
+
+                  {/* Move logo outside of p tag */}
+                  <motion.div 
+                    className="mb-4"
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.7, delay: 0.3 }}
+                  >
+                    <img 
+                    alt="SMK Budi Mulia Karawang Logo" 
+                    className="h-20 w-20 rounded-full border-2 border-white shadow-md mx-auto" 
+                    src="/logo_smk.png" 
+                    />
+                  </motion.div>
+                  
                   <motion.p 
                   className="text-lg md:text-xl mb-10 max-w-3xl mx-auto text-purple-100"
                   initial={{ y: 50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.7, delay: 0.4 }}
                   >
-                  <div className="flex justify-center mb-4">
-                    <img 
-                    alt="SMK Budi Mulia Karawang Logo" 
-                    className="h-20 w-20 rounded-full border-2 border-white shadow-md" 
-                    src="/logo_smk.png" 
-                    />
-                  </div>
                   Mencetak Generasi Unggul, Kreatif, dan Berkarakter untuk Masa Depan Gemilang.
                   </motion.p>
                     <motion.div

@@ -1,5 +1,4 @@
-
-    import React from 'react';
+import React from 'react';
     import { Facebook, Instagram, Twitter, Youtube, MapPin, Phone, Mail } from 'lucide-react';
 
     const Footer = () => {
@@ -48,21 +47,21 @@
               <div>
                 <p className="text-lg font-semibold text-white mb-4">Ikuti Kami</p>
                 <div className="flex space-x-4">
-                  <a href="#" aria-label="Facebook SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  {/* <a href="#" aria-label="Facebook SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
                     <Facebook size={24} />
-                  </a>
-                  <a href="#" aria-label="Instagram SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  </a> */}
+                  <a href="https://www.instagram.com/smk_budimuliakrw/" aria-label="Instagram SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
                     <Instagram size={24} />
                   </a>
-                  <a href="#" aria-label="Twitter SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  {/* <a href="#" aria-label="Twitter SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
                     <Twitter size={24} />
-                  </a>
-                  <a href="#" aria-label="Youtube SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  </a> */}
+                  <a href="https://www.youtube.com/@smkbudimuliakrw9187" aria-label="Youtube SMK Budi Mulia Karawang" className="text-gray-400 hover:text-purple-400 transition-colors">
                     <Youtube size={24} />
                   </a>
                 </div>
                 <div className="mt-6">
-                  <img  alt="Peta Lokasi SMK Budi Mulia Karawang" class="w-full h-32 object-cover rounded-lg shadow-md border border-gray-700" src="https://images.unsplash.com/photo-1676905505142-c6bb852c40cf" />
+                  <img  alt="Peta Lokasi SMK Budi Mulia Karawang" className="w-full h-32 object-cover rounded-lg shadow-md border border-gray-700" src="https://images.unsplash.com/photo-1676905505142-c6bb852c40cf" />
                 </div>
               </div>
             </div>
@@ -81,4 +80,3 @@
     };
 
     export default Footer;
-  
