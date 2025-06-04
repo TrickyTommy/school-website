@@ -54,23 +54,31 @@ export default function PrincipalsManager() {
         toast({
           title: "Validasi Error",
           description: "Nama dan periode harus diisi",
+          duration: 3000,
           variant: "destructive"
         });
         return;
       }
 
-      const imageData = formData.foto instanceof File ? 
-        await convertToBase64(formData.foto) : formData.foto;
-
-      const submitData = {
-        id: editingPrincipal?.id,
+      let submitData = {
+        ...(editingPrincipal?.id && { id: editingPrincipal.id }),
         nama: formData.nama,
         tahun_jabatan: formData.tahun_jabatan,
-        foto: imageData
       };
 
-      const action = editingPrincipal ? principalsAPI.update : principalsAPI.create;
-      const result = await action(submitData);
+      // Handle photo data with webp support
+      if (formData.foto === null || formData.foto === '') {
+        submitData.foto = null;
+      } else if (formData.foto instanceof File) {
+        const base64 = await convertToBase64(formData.foto);
+        submitData.foto = base64.split(',')[1];
+      } else if (typeof formData.foto === 'string') {
+        submitData.foto = formData.foto.replace(/^data:image\/[a-z]+;base64,/, '');
+      }
+
+      const result = await (editingPrincipal ? 
+        principalsAPI.update(submitData) : 
+        principalsAPI.create(submitData));
 
       if (result.status === 'success') {
         await loadPrincipals();
@@ -78,16 +86,17 @@ export default function PrincipalsManager() {
         resetForm();
         toast({
           title: "Berhasil",
-          description: result.message
+          description: editingPrincipal ? "Data berhasil diperbarui" : "Data berhasil ditambahkan",
+          duration: 3000
         });
-      } else {
-        throw new Error(result.message);
       }
     } catch (error) {
+      console.error('Submit error:', error);
       toast({
         title: "Error",
-        description: error.message || "Gagal menyimpan data",
-        variant: "destructive"
+        description: "Gagal menyimpan data",
+        variant: "destructive",
+        duration: 3000
       });
     }
   };
@@ -126,6 +135,13 @@ export default function PrincipalsManager() {
     setEditingPrincipal(null);
   };
 
+  const handleRemoveImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      foto: null
+    }));
+  };
+
   return (
     <div className="space-y-4">
       <Button onClick={() => setIsDialogOpen(true)}>
@@ -154,34 +170,45 @@ export default function PrincipalsManager() {
             </div>
             <div>
               <Label>Foto</Label>
-              <FileUpload
-                accept="image/*"
-                onFileSelect={async (file) => {
-                  try {
+              <div className="space-y-2">
+                <FileUpload
+                  accept="image/*,.webp"
+                  onFileSelect={(file) => {
+                    if (!file) return;
+                    
                     if (file.size > 5000000) {
                       toast({
                         title: "Error",
                         description: "Ukuran file terlalu besar (maksimal 5MB)",
-                        variant: "destructive"
+                        variant: "destructive",
+                        duration: 3000
                       });
                       return;
                     }
-                    setFormData({...formData, foto: file});
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: "Gagal memproses gambar",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                preview={formData.foto ? {
-                  type: 'image',
-                  url: formData.foto instanceof File ? 
-                    URL.createObjectURL(formData.foto) : 
-                    formData.foto
-                } : null}
-              />
+
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                    if (!validTypes.includes(file.type)) {
+                      toast({
+                        title: "Error",
+                        description: "Format file tidak didukung",
+                        variant: "destructive",
+                        duration: 3000
+                      });
+                      return;
+                    }
+
+                    setFormData(prev => ({...prev, foto: file}));
+                  }}
+                  preview={formData.foto ? {
+                    type: 'image',
+                    url: formData.foto instanceof File ? 
+                      URL.createObjectURL(formData.foto) : 
+                      (formData.foto?.startsWith('data:') ? formData.foto : `data:image/jpeg;base64,${formData.foto}`)
+                  } : null}
+                  onRemove={handleRemoveImage}
+                />
+              </div>
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => {
@@ -204,9 +231,14 @@ export default function PrincipalsManager() {
             <CardContent className="flex items-center justify-between p-4">
               <div className="flex items-center space-x-4">
                 <img
-                  src={principal.foto}
+                  src={principal.foto ? 
+                    (principal.foto.startsWith('data:') ? principal.foto : `data:image/jpeg;base64,${principal.foto}`) 
+                    : '/placeholder-user.jpg'}
                   alt={principal.nama}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover bg-gray-100"
+                  onError={(e) => {
+                    e.target.src = '/placeholder-user.jpg';
+                  }}
                 />
                 <div>
                   <h3 className="font-semibold">{principal.nama}</h3>
@@ -221,7 +253,7 @@ export default function PrincipalsManager() {
                     setFormData({
                       nama: principal.nama,
                       tahun_jabatan: principal.tahun_jabatan,
-                      foto: principal.foto
+                      foto: principal.foto || ''  // Use empty string for editing mode
                     });
                     setEditingPrincipal(principal);
                     setIsDialogOpen(true);

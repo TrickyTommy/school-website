@@ -35,6 +35,14 @@
             case 'GET':
                 $stmt = $db->query("SELECT id, nama, tahun_jabatan, foto FROM principals ORDER BY created_at DESC");
                 $principals = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Convert foto to base64
+                foreach ($principals as &$principal) {
+                    if ($principal['foto']) {
+                        $principal['foto'] = 'data:image/jpeg;base64,' . $principal['foto'];
+                    }
+                }
+                
                 echo json_encode(['status' => 'success', 'data' => $principals]);
                 break;
 
@@ -45,11 +53,18 @@
                     throw new Exception('Nama dan periode harus diisi');
                 }
 
+                // Handle base64 image
+                $foto = null;
+                if (!empty($data['foto'])) {
+                    // Remove data:image prefix
+                    $foto = preg_replace('/^data:image\/\w+;base64,/', '', $data['foto']);
+                }
+
                 $stmt = $db->prepare("INSERT INTO principals (nama, tahun_jabatan, foto) VALUES (?, ?, ?)");
                 $stmt->execute([
                     $data['nama'],
                     $data['tahun_jabatan'],
-                    $data['foto'] ?? null
+                    $foto
                 ]);
                 
                 echo json_encode([
@@ -61,15 +76,22 @@
             case 'PUT':
                 $data = json_decode(file_get_contents('php://input'), true);
                 
-                if (empty($data['nama']) || empty($data['tahun_jabatan'])) {
-                    throw new Exception('Nama dan periode harus diisi');
+                if (empty($data['id']) || empty($data['nama']) || empty($data['tahun_jabatan'])) {
+                    throw new Exception('Data tidak lengkap');
+                }
+
+                // Handle base64 image
+                $foto = null;
+                if (!empty($data['foto'])) {
+                    // Remove data:image prefix
+                    $foto = preg_replace('/^data:image\/\w+;base64,/', '', $data['foto']);
                 }
 
                 $stmt = $db->prepare("UPDATE principals SET nama = ?, tahun_jabatan = ?, foto = ? WHERE id = ?");
                 $stmt->execute([
                     $data['nama'],
                     $data['tahun_jabatan'],
-                    $data['foto'] ?? null,
+                    $foto,
                     $data['id']
                 ]);
                 
