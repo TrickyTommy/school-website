@@ -8,6 +8,7 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { FileUpload } from '@/components/FileUpload';
 import { guruStaffAPI } from '@/services/api';
+import { compressImage } from '@/lib/imageCompression';
 
 export default function TeacherStaffManager() {
   const [members, setMembers] = useState([]);
@@ -57,10 +58,21 @@ export default function TeacherStaffManager() {
 
   const handleFileSelect = async (file) => {
     try {
-      const base64 = await convertToBase64(file);
-      setImagePreview({ type: 'image', url: base64 });
-      setFormData(prev => ({ ...prev, image: base64 }));
+      // Show loading state
+      setImagePreview({ type: 'loading' });
+      
+      // Compress image
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 80
+      });
+      
+      // Update preview and form data
+      setImagePreview({ type: 'image', url: compressedBase64 });
+      setFormData(prev => ({ ...prev, image: compressedBase64 }));
     } catch (error) {
+      console.error('Image compression error:', error);
       toast({
         title: "Error",
         description: "Failed to process image",
@@ -106,10 +118,10 @@ export default function TeacherStaffManager() {
           // Map expertise values to proper display names
           {
             'kurikulum': 'Kurikulum',
-            'kesiswaan': 'Kesiswaan',
-            'sarana': 'Sarana & Prasarana',
-            'humas': 'Hubungan Masyarakat',
-            'bendahara': 'Bendahara'
+            'Kesiswaan': 'Kesiswaan',
+            'Sarana & Prasarana': 'Sarana & Prasarana',
+            'Hubungan Masyarakat': 'Hubungan Masyarakat',
+            'Bendahara': 'Bendahara'
           }[formData.expertise] || formData.expertise 
           : formData.expertise,
         type: formData.role === 'teacher' ? 'teacher' : formData.type
