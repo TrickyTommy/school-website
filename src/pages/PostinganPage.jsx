@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
-    import { motion } from 'framer-motion';
-    import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-    import { Button } from '@/components/ui/button';
-    import { Newspaper, Image as ImageIcon, Video, PlusCircle, Edit, Trash2, CalendarDays, UserCircle, Tag, AlertTriangle } from 'lucide-react';
-    import { useToast } from '@/components/ui/use-toast';
-    import { useNavigate } from 'react-router-dom';
-    import { API_ENDPOINTS } from '@/services/api';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Newspaper, Image as ImageIcon, Video, CalendarDays, UserCircle, Tag, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '@/services/api';
+
+// Ekstrak YouTube ID dan kembalikan embed URL
+const getYouTubeEmbedUrl = (url) => {
+  if (!url) return null;
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/
+  );
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+};
+
+const isDirectVideoUrl = (url) =>
+  url && /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
 
     const PostinganPage = () => {
       const navigate = useNavigate();
@@ -149,25 +161,64 @@ import React, { useState, useEffect } from 'react';
                     className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 glassmorphic dark:bg-gray-800/60 cursor-pointer"
                     onClick={() => handlePostClick(post)}
                   >
-                    {(post.image || post.videoUrl) && (
-                      <div className="relative w-full pt-[56.25%] overflow-hidden"> {/* 16:9 aspect ratio container */}
-                        {post.image ? (
-                          <img   
-                            alt={post.title} 
-                            className="absolute top-0 left-0 w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
-                            src={post.image}
-                          />
-                        ) : post.videoUrl && (
-                          <div className="absolute top-0 left-0 w-full h-full">
-                            <video 
-                              src={post.videoUrl} 
-                              controls
-                              className="w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
+                    {/* ── Thumbnail / Preview Media ── */}
+                    {(() => {
+                      const videoUrl   = post.video_url  || post.videoUrl  || null;
+                      const videoFile  = post.video_file || post.videoFile || null;
+                      const ytEmbed    = getYouTubeEmbedUrl(videoUrl);
+                      const isDirect   = isDirectVideoUrl(videoUrl);
+
+                      if (post.image) {
+                        return (
+                          <div className="relative w-full pt-[56.25%] overflow-hidden">
+                            <img
+                              alt={post.title}
+                              src={post.image}
+                              className="absolute top-0 left-0 w-full h-full object-cover bg-gray-100 dark:bg-gray-800"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                            {/* Overlay icon jika jenis video */}
+                            {post.type === 'video' && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center">
+                                  <Video className="w-6 h-6 text-purple-600" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      if (ytEmbed) {
+                        return (
+                          <div className="relative w-full pt-[56.25%] overflow-hidden">
+                            <iframe
+                              src={ytEmbed}
+                              title={post.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="absolute top-0 left-0 w-full h-full"
                             />
                           </div>
-                        )}
-                      </div>
-                    )}
+                        );
+                      }
+
+                      if (isDirect || videoFile) {
+                        return (
+                          <div className="relative w-full pt-[56.25%] overflow-hidden bg-black">
+                            <video
+                              src={isDirect ? videoUrl : videoFile}
+                              controls
+                              preload="metadata"
+                              className="absolute top-0 left-0 w-full h-full object-contain"
+                            />
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
+
                     <CardHeader className="pb-2">
                       <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-1">
                         {getPostIcon(post.type)}
@@ -181,17 +232,6 @@ import React, { useState, useEffect } from 'react';
                       <CardDescription className="text-gray-600 dark:text-gray-300 mb-3 text-sm line-clamp-3">
                         {post.content}
                       </CardDescription>
-                       {post.type === 'video' && post.videoUrl && (
-                        <div className="aspect-w-16 aspect-h-9 my-3 rounded-lg overflow-hidden">
-                          <iframe
-                            src={post.videoUrl}
-                            title={post.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="w-full h-full"
-                          ></iframe>
-                        </div>
-                      )}
                       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mt-3 pt-3 border-t dark:border-gray-700">
                         <p className="flex items-center"><CalendarDays className="w-3 h-3 mr-1.5" /> {new Date(post.date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                         <p className="flex items-center"><UserCircle className="w-3 h-3 mr-1.5" /> Oleh: {post.author}</p>

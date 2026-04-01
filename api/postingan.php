@@ -19,11 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 try {
     require_once 'config.php';
 
-    // Support method override: jika POST dengan header/field X-HTTP-Method-Override atau _method
+    // Support method override via header atau field _method di body
     $method = $_SERVER['REQUEST_METHOD'];
+    $rawInput = file_get_contents('php://input');
+    $data = json_decode($rawInput, true);
+
     if ($method === 'POST') {
-        $input = file_get_contents('php://input');
-        $data  = json_decode($input, true);
         $override = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']
                  ?? ($data['_method'] ?? null);
         if ($override && in_array(strtoupper($override), ['PUT', 'DELETE'])) {
@@ -35,26 +36,31 @@ try {
         case 'GET':
             $stmt = $pdo->query("SELECT * FROM postingan ORDER BY date DESC");
             ob_clean();
-            echo json_encode(['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            echo json_encode([
+                'status' => 'success',
+                'data'   => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ]);
             break;
 
         case 'POST':
-            $data = json_decode(file_get_contents('php://input'), true);
             if (!$data || empty($data['title'])) {
                 throw new Exception('Data tidak valid: title wajib diisi');
             }
 
-            $sql = "INSERT INTO postingan (id, title, content, image, type, category, author)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO postingan
+                        (id, title, content, image, video_url, video_file, type, category, author)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-                $data['id'] ?? uniqid('post_'),
+                $data['id']         ?? uniqid('post_'),
                 $data['title'],
-                $data['content'] ?? '',
-                $data['image'] ?? null,
-                $data['type'] ?? 'berita',
-                $data['category'] ?? null,
-                $data['author'] ?? 'Admin'
+                $data['content']    ?? '',
+                $data['image']      ?? null,
+                $data['video_url']  ?? null,
+                $data['video_file'] ?? null,
+                $data['type']       ?? 'berita',
+                $data['category']   ?? null,
+                $data['author']     ?? 'Admin'
             ]);
 
             ob_clean();
@@ -62,25 +68,28 @@ try {
             break;
 
         case 'PUT':
-            $data = $data ?? json_decode(file_get_contents('php://input'), true);
             if (!$data || empty($data['id'])) {
                 throw new Exception('Data tidak valid: id wajib diisi untuk update');
             }
 
             $sql = "UPDATE postingan SET
-                        title    = ?,
-                        content  = ?,
-                        image    = ?,
-                        type     = ?,
-                        category = ?
+                        title      = ?,
+                        content    = ?,
+                        image      = ?,
+                        video_url  = ?,
+                        video_file = ?,
+                        type       = ?,
+                        category   = ?
                     WHERE id = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $data['title'],
-                $data['content'] ?? '',
-                $data['image'] ?? null,
-                $data['type'] ?? 'berita',
-                $data['category'] ?? null,
+                $data['content']    ?? '',
+                $data['image']      ?? null,
+                $data['video_url']  ?? null,
+                $data['video_file'] ?? null,
+                $data['type']       ?? 'berita',
+                $data['category']   ?? null,
                 $data['id']
             ]);
 
@@ -105,6 +114,7 @@ try {
             echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
             break;
     }
+
 } catch (PDOException $e) {
     error_log('DB Error postingan.php: ' . $e->getMessage());
     ob_clean();
