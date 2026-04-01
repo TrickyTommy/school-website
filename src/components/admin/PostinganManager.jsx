@@ -8,7 +8,7 @@ import { FileUpload } from '@/components/FileUpload';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { API_ENDPOINTS } from '@/services/api';
+import { postinganAPI } from '@/services/api';
 
 export default function PostinganManager() {
   const [posts, setPosts] = useState([]);
@@ -33,15 +33,16 @@ export default function PostinganManager() {
 
   const loadPosts = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.postingan);
-      const result = await response.json();
+      const result = await postinganAPI.getAll();
       if (result.status === 'success') {
         setPosts(result.data);
+      } else {
+        throw new Error(result.message || 'Gagal memuat postingan');
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load posts",
+        description: error.message || "Gagal memuat postingan",
         variant: "destructive"
       });
     }
@@ -79,32 +80,50 @@ export default function PostinganManager() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.title) {
+      toast({
+        title: "Validasi Error",
+        description: "Judul postingan harus diisi",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch(API_ENDPOINTS.postingan, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          id: `post_${Date.now()}`
-        })
-      });
 
-      const result = await response.json();
+      const submitData = editingPost
+        ? {
+            ...formData,
+            id: editingPost.id,
+            // Pertahankan gambar lama jika tidak ada file baru
+            image: formData.image || editingPost.image || null
+          }
+        : {
+            ...formData,
+            id: `post_${Date.now()}`
+          };
+
+      // Gunakan postinganAPI (sama seperti pola TeacherStaffManager)
+      const action = editingPost ? postinganAPI.update : postinganAPI.create;
+      const result = await action(submitData);
+
       if (result.status === 'success') {
         await loadPosts();
+        setIsDialogOpen(false);
         resetForm();
         toast({
-          title: "Success",
-          description: "Post created successfully"
+          title: "Berhasil",
+          description: editingPost ? "Postingan berhasil diperbarui" : "Postingan berhasil dibuat"
         });
       } else {
-        throw new Error(result.message);
+        throw new Error(result.message || 'Gagal menyimpan postingan');
       }
     } catch (error) {
+      console.error('Submit error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save post",
+        description: error.message || "Gagal menyimpan postingan",
         variant: "destructive"
       });
     } finally {
@@ -113,22 +132,20 @@ export default function PostinganManager() {
   };
 
   const deletePost = async (postId) => {
+    if (!window.confirm('Yakin ingin menghapus postingan ini?')) return;
     try {
-      const response = await fetch(`${API_ENDPOINTS.postingan}?id=${postId}`, {
-        method: 'DELETE',
-      });
-      const result = await response.json();
-      
+      const result = await postinganAPI.delete(postId);
       if (result.status === 'success') {
-        await loadPosts(); // Reload posts after successful deletion
+        await loadPosts();
         toast({
           title: "Berhasil dihapus",
           description: "Postingan telah dihapus."
         });
       } else {
-        throw new Error(result.message || 'Failed to delete post');
+        throw new Error(result.message || 'Gagal menghapus postingan');
       }
     } catch (error) {
+      console.error('Delete error:', error);
       toast({
         title: "Error",
         description: error.message || "Gagal menghapus postingan",
