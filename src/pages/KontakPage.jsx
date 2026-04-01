@@ -72,7 +72,7 @@ import React from 'react';
                     </div>
                     <div>
                       <p className="font-medium text-gray-700 dark:text-gray-200">Email</p>
-                      <p className="text-gray-600 dark:text-gray-300">info@smkbudimuliakrw.sch.id</p>
+                      <p className="text-gray-600 dark:text-gray-300">websmkbmkrw@gmail.com</p>
                     </div>
                   </div>
                 </CardContent>
