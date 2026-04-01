@@ -62,7 +62,7 @@ import { useState, useEffect } from 'react';
                   <img 
                     alt="Gedung sekolah SMK Budi Mulia Karawang " 
                     className="w-full h-full object-cover" 
-                    src="\public\gedung-sekolah.png" 
+                    src="/gedung-sekolah.png" 
                   />
                 </div>
                 <div className="container mx-auto px-4 text-center relative z-10">
