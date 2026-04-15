@@ -17,6 +17,7 @@ import JurusanManager from '@/components/admin/JurusanManager';
 import PostinganManager from '@/components/admin/PostinganManager';
 import TeacherStaffManager from '@/components/admin/TeacherStaffManager';
 import PrincipalsManager from '@/components/admin/PrincipalsManager';
+import TentangKamiManager from '@/components/admin/TentangKamiManager';
 
 export const initialJurusanIcons = { Briefcase, Cpu, Code };
 
@@ -27,6 +28,7 @@ export const getIconName = (IconComponent) => {
 const menuItems = [
   { id: 'jurusan', label: 'Kelola Jurusan', icon: BookOpen },
   { id: 'postingan', label: 'Kelola Postingan', icon: ScrollText },
+  { id: 'tentang_kami', label: 'Kelola Tentang Kami', icon: School },
   { id: 'staff', label: 'Kelola Guru & Staff', icon: Users },
   { id: 'principals', label: 'Kelola Kepala Sekolah', icon: School }
 ];
@@ -96,6 +98,8 @@ const AdminPage = () => {
                  postinganList={postinganList}
                  setPostinganList={setPostinganList}
                />;
+      case 'tentang_kami':
+        return <TentangKamiManager />;
       case 'staff':
         return <TeacherStaffManager />;
       case 'principals':

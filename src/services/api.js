@@ -5,6 +5,7 @@ const BASE_URL = 'https://smkbudimuliakrw.sch.id';
 
 export const API_ENDPOINTS = {
   postingan: `${BASE_URL}/postingan.php`,
+  tentangKami: `${BASE_URL}/tentang_kami.php`,
   guruStaff: `${BASE_URL}/guru_staff.php`,
   jurusan: `${BASE_URL}/jurusan.php`,
   principals: `${BASE_URL}/principals.php`,
@@ -89,6 +90,58 @@ const parseResponse = async (response) => {
     return JSON.parse(text);
   } catch {
     throw new Error(`Response bukan JSON valid: ${text.substring(0, 200)}`);
+  }
+};
+
+export const tentangKamiAPI = {
+  getAll: async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.tentangKami);
+      return await parseResponse(response);
+    } catch (error) {
+      console.error('Error fetching tentang kami:', error);
+      throw error;
+    }
+  },
+
+  create: async (data) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.tentangKami, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await parseResponse(response);
+    } catch (error) {
+      console.error('Error creating tentang kami:', error);
+      throw error;
+    }
+  },
+
+  update: async (data) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.tentangKami, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await parseResponse(response);
+    } catch (error) {
+      console.error('Error updating tentang kami:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.tentangKami}?id=${id}`, {
+        method: 'DELETE'
+      });
+      return await parseResponse(response);
+    } catch (error) {
+      console.error('Error deleting tentang kami:', error);
+      throw error;
+    }
   }
 };
 
