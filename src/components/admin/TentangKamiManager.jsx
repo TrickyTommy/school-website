@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUpload } from '@/components/FileUpload';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PlusCircle, Edit, Trash2, Upload, Image as ImageIcon, Video, ArrowUp, ArrowDown } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Upload, Image as ImageIcon, Video, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { tentangKamiAPI } from '@/services/api';
 
@@ -28,18 +28,15 @@ export default function TentangKamiManager() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [filePreview, setFilePreview] = useState(null);
   const [videoInputMode, setVideoInputMode] = useState('upload');
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     icon_type: 'History',
-    image: null,
-    video_url: '',
-    video_file: null,
     display_order: 0,
-    is_active: true
+    is_active: true,
+    media: []
   });
 
   useEffect(() => {
@@ -75,13 +72,24 @@ export default function TentangKamiManager() {
     try {
       const base64 = await convertToBase64(file);
       const isVideo = file.type.startsWith('video/');
-      setFilePreview({ url: base64, type: isVideo ? 'video' : 'image' });
+      
+      const newMediaItem = {
+        type: isVideo ? 'video' : 'image',
+        url: null,
+        file: base64,
+        display_order: formData.media.length,
+        preview: { url: base64, type: isVideo ? 'video' : 'image' }
+      };
+
       setFormData((prev) => ({
         ...prev,
-        image: isVideo ? prev.image : base64,
-        video_file: isVideo ? base64 : prev.video_file,
-        video_url: isVideo ? '' : prev.video_url
+        media: [...prev.media, newMediaItem]
       }));
+
+      toast({
+        title: 'Berhasil',
+        description: 'Media berhasil ditambahkan'
+      });
     } catch {
       toast({ title: 'Error', description: 'Gagal memproses file', variant: 'destructive' });
     }
@@ -92,6 +100,58 @@ export default function TentangKamiManager() {
     const ytId = getYouTubeId(url);
     if (ytId) return true;
     return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+  };
+
+  const handleAddVideoUrl = () => {
+    const url = prompt('Masukkan link YouTube atau URL video langsung (.mp4, .webm):');
+    if (url && isValidVideoUrl(url)) {
+      const newMediaItem = {
+        type: 'video',
+        url: url,
+        file: null,
+        display_order: formData.media.length,
+        preview: { url: url, type: 'video-url' }
+      };
+
+      setFormData((prev) => ({
+        ...prev,
+        media: [...prev.media, newMediaItem]
+      }));
+
+      toast({
+        title: 'Berhasil',
+        description: 'Video URL berhasil ditambahkan'
+      });
+    } else if (url) {
+      toast({ title: 'Error', description: 'URL video tidak valid', variant: 'destructive' });
+    }
+  };
+
+  const removeMedia = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      media: prev.media.filter((_, i) => i !== index)
+    }));
+  };
+
+  const moveMediaUp = (index) => {
+    if (index === 0) return;
+    setFormData((prev) => {
+      const newMedia = [...prev.media];
+      [newMedia[index], newMedia[index - 1]] = [newMedia[index - 1], newMedia[index]];
+      newMedia.forEach((m, i) => m.display_order = i);
+      return { ...prev, media: newMedia };
+    });
+  };
+
+  const moveMediaDown = (index) => {
+    if (index === formData.media.length - 1) return;
+    setFormData((prev) => {
+      const newMedia = [...prev.media];
+      [newMedia[index], newMedia[index + 1]] = [newMedia[index + 1], newMedia[index]];
+      newMedia.forEach((m, i) => m.display_order = i);
+      return { ...prev, media: newMedia };
+    });
   };
 
   const handleSubmit = async () => {
@@ -106,10 +166,7 @@ export default function TentangKamiManager() {
       const submitData = editingItem
         ? {
             ...formData,
-            id: editingItem.id,
-            image: formData.image || editingItem.image || null,
-            video_url: formData.video_url || editingItem.video_url || null,
-            video_file: formData.video_file || editingItem.video_file || null
+            id: editingItem.id
           }
         : { ...formData, id: `tentang_${Date.now()}` };
 
@@ -156,13 +213,10 @@ export default function TentangKamiManager() {
       title: '',
       description: '',
       icon_type: 'History',
-      image: null,
-      video_url: '',
-      video_file: null,
       display_order: 0,
-      is_active: true
+      is_active: true,
+      media: []
     });
-    setFilePreview(null);
     setEditingItem(null);
     setVideoInputMode('upload');
   };
@@ -173,21 +227,13 @@ export default function TentangKamiManager() {
       title: item.title || '',
       description: item.description || '',
       icon_type: item.icon_type || 'History',
-      image: item.image || null,
-      video_url: item.video_url || '',
-      video_file: item.video_file || null,
       display_order: item.display_order || 0,
-      is_active: item.is_active !== false
+      is_active: item.is_active !== false,
+      media: (item.media || []).map(m => ({
+        ...m,
+        preview: null
+      }))
     });
-    if (item.video_url) {
-      setFilePreview({ url: item.video_url, type: 'video-url' });
-      setVideoInputMode('link');
-    } else if (item.video_file) {
-      setFilePreview({ url: item.video_file, type: 'video' });
-      setVideoInputMode('upload');
-    } else if (item.image) {
-      setFilePreview({ url: item.image, type: 'image' });
-    }
     setIsDialogOpen(true);
   };
 
@@ -215,6 +261,46 @@ export default function TentangKamiManager() {
     return null;
   };
 
+  const MediaPreview = ({ media }) => {
+    if (!media.preview && !media.url && !media.file) return null;
+
+    const url = media.preview?.url || media.url || media.file;
+    const type = media.preview?.type || (media.type === 'video' ? 'video' : 'image');
+
+    if (type === 'image') {
+      return (
+        <img
+          src={url}
+          alt="Preview"
+          className="w-full h-32 object-cover rounded-lg border"
+        />
+      );
+    }
+
+    if (type === 'video-url' || (type === 'video' && url && url.includes('youtube'))) {
+      return (
+        <div className="mt-2 aspect-video rounded-lg overflow-hidden border max-h-40">
+          <iframe
+            src={`https://www.youtube.com/embed/${getYouTubeId(url)}`}
+            title="YouTube Preview"
+            className="w-full h-full"
+            allowFullScreen
+          />
+        </div>
+      );
+    }
+
+    if (type === 'video') {
+      return (
+        <video controls className="w-full rounded-lg border max-h-40">
+          <source src={url} />
+        </video>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="space-y-4">
       <Button onClick={() => setIsDialogOpen(true)}>
@@ -223,7 +309,7 @@ export default function TentangKamiManager() {
 
       {/* Dialog Form */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) { setIsDialogOpen(false); resetForm(); } else setIsDialogOpen(true); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-3xl max-h-[95vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Edit' : 'Buat'} Item Tentang Kami</DialogTitle>
           </DialogHeader>
@@ -246,7 +332,7 @@ export default function TentangKamiManager() {
                 placeholder="Tuliskan deskripsi lengkap tentang item ini..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={5}
+                rows={4}
               />
             </div>
 
@@ -274,67 +360,103 @@ export default function TentangKamiManager() {
               />
             </div>
 
-            {/* Gambar */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1"><ImageIcon className="h-4 w-4" /> Unggah Gambar</Label>
-              <FileUpload
-                accept="image/*"
-                onFileSelect={handleFileSelect}
-                preview={filePreview?.type === 'image' ? filePreview : null}
-                onClear={() => {
-                  setFilePreview(null);
-                  setFormData((p) => ({ ...p, image: null }));
-                }}
-              />
-            </div>
-
-            {/* Video */}
-            <div className="space-y-4 border-t pt-4">
-              <Label className="flex items-center gap-1"><Video className="h-4 w-4" /> Media Video</Label>
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={videoInputMode === 'upload' ? 'default' : 'outline'}
-                  onClick={() => setVideoInputMode('upload')}
-                  size="sm"
-                >
-                  Upload File
-                </Button>
-                <Button
-                  type="button"
-                  variant={videoInputMode === 'link' ? 'default' : 'outline'}
-                  onClick={() => setVideoInputMode('link')}
-                  size="sm"
-                >
-                  Gunakan Link
-                </Button>
+            {/* Media Section */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <Label className="text-lg font-semibold">Media (Foto & Video)</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('mediaFileInput')?.click()}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-1" /> Tambah Foto/Video
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddVideoUrl}
+                  >
+                    <Video className="h-4 w-4 mr-1" /> Tambah Video URL
+                  </Button>
+                </div>
+                <input
+                  id="mediaFileInput"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                  className="hidden"
+                />
               </div>
 
-              {videoInputMode === 'upload' ? (
-                <FileUpload
-                  accept="video/*"
-                  onFileSelect={handleFileSelect}
-                  preview={filePreview?.type === 'video' ? filePreview : null}
-                  onClear={() => {
-                    setFilePreview(null);
-                    setFormData((p) => ({ ...p, video_file: null }));
-                  }}
-                />
+              {formData.media.length === 0 ? (
+                <Card className="bg-gray-50 dark:bg-gray-800">
+                  <CardContent className="p-4 text-center text-gray-500">
+                    Belum ada media. Tambahkan foto atau video.
+                  </CardContent>
+                </Card>
               ) : (
-                <>
-                  <Input
-                    placeholder="Paste link YouTube atau URL video langsung (.mp4, .webm)"
-                    value={formData.video_url}
-                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                  />
-                  {formData.video_url && <VideoUrlPreview url={formData.video_url} />}
-                </>
+                <div className="space-y-3">
+                  {formData.media.map((media, index) => (
+                    <Card key={index} className="overflow-hidden">
+                      <CardContent className="p-3">
+                        <div className="flex gap-3">
+                          {/* Preview */}
+                          <div className="flex-shrink-0 w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
+                            <MediaPreview media={media} />
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-semibold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded capitalize">
+                                {media.type}
+                              </span>
+                              <span className="text-xs text-gray-500">#{index + 1}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                              {media.url || (media.file ? `File (${(media.file.length / 1024).toFixed(0)} KB)` : 'N/A')}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-col gap-1 flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => moveMediaUp(index)}
+                              disabled={index === 0}
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => moveMediaDown(index)}
+                              disabled={index === formData.media.length - 1}
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeMedia(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
 
             {/* Status */}
-            <div className="flex items-center gap-2 pt-2 border-t">
+            <div className="border-t pt-4 flex items-center gap-2">
               <input
                 type="checkbox"
                 id="is_active"
@@ -385,6 +507,7 @@ export default function TentangKamiManager() {
                       <div className="flex gap-2 mt-2 text-xs text-gray-500">
                         <span>Icon: {item.icon_type}</span>
                         <span>Order: {item.display_order}</span>
+                        <span>Media: {item.media?.length || 0}</span>
                         <span>{item.is_active ? '✓ Aktif' : '✗ Nonaktif'}</span>
                       </div>
                     </div>

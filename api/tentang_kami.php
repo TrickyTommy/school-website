@@ -34,13 +34,56 @@ try {
 
     switch ($method) {
         case 'GET':
-            // Get all tentang kami items, ordered by display_order
-            $stmt = $pdo->query("SELECT * FROM tentang_kami WHERE is_active = TRUE ORDER BY display_order ASC");
-            ob_clean();
-            echo json_encode([
-                'status' => 'success',
-                'data'   => $stmt->fetchAll(PDO::FETCH_ASSOC)
-            ]);
+            // Check if requesting full data (for detail view)
+            $fullData = !empty($_GET['full']) || !empty($_GET['id']);
+            
+            if (!empty($_GET['id'])) {
+                // Get single item with full media data
+                $stmt = $pdo->prepare("SELECT * FROM tentang_kami WHERE id = ?");
+                $stmt->execute([$_GET['id']]);
+                $item = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$item) {
+                    throw new Exception('Item tidak ditemukan');
+                }
+
+                $mediaStmt = $pdo->prepare("SELECT * FROM tentang_kami_media WHERE tentang_kami_id = ? ORDER BY display_order ASC");
+                $mediaStmt->execute([$item['id']]);
+                $item['media'] = $mediaStmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                ob_clean();
+                echo json_encode(['status' => 'success', 'data' => $item]);
+            } else {
+                // Get all items - exclude heavy base64 data by default
+                $stmt = $pdo->query("SELECT * FROM tentang_kami WHERE is_active = TRUE ORDER BY display_order ASC");
+                $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($items as &$item) {
+                    $mediaStmt = $pdo->prepare("SELECT * FROM tentang_kami_media WHERE tentang_kami_id = ? ORDER BY display_order ASC");
+                    $mediaStmt->execute([$item['id']]);
+                    $allMedia = $mediaStmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Process media: keep first one fully intact, strip file from others
+                    $processedMedia = [];
+                    foreach ($allMedia as $index => $media) {
+                        if ($index === 0) {
+                            // Keep first media fully intact (with base64 for thumbnail)
+                            $processedMedia[] = $media;
+                        } else {
+                            // Remove file field from other media to save bandwidth
+                            unset($media['file']);
+                            $processedMedia[] = $media;
+                        }
+                    }
+                    $item['media'] = $processedMedia;
+                }
+                
+                ob_clean();
+                echo json_encode([
+                    'status' => 'success',
+                    'data'   => $items
+                ]);
+            }
             break;
 
         case 'POST':
@@ -48,21 +91,35 @@ try {
                 throw new Exception('Data tidak valid: title wajib diisi');
             }
 
+            $itemId = $data['id'] ?? uniqid('tentang_');
+            
             $sql = "INSERT INTO tentang_kami
-                        (id, title, description, image, video_url, video_file, icon_type, display_order, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (id, title, description, icon_type, display_order, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-                $data['id']           ?? uniqid('tentang_'),
+                $itemId,
                 $data['title'],
                 $data['description']  ?? '',
-                $data['image']        ?? null,
-                $data['video_url']    ?? null,
-                $data['video_file']   ?? null,
                 $data['icon_type']    ?? null,
                 $data['display_order'] ?? 0,
                 $data['is_active']    ?? true
             ]);
+
+            // Insert media items
+            if (!empty($data['media']) && is_array($data['media'])) {
+                $mediaStmt = $pdo->prepare("INSERT INTO tentang_kami_media (id, tentang_kami_id, type, url, file, display_order) VALUES (?, ?, ?, ?, ?, ?)");
+                foreach ($data['media'] as $index => $mediaItem) {
+                    $mediaStmt->execute([
+                        uniqid('media_'),
+                        $itemId,
+                        $mediaItem['type'] ?? 'image',
+                        $mediaItem['url'] ?? null,
+                        $mediaItem['file'] ?? null,
+                        $mediaItem['display_order'] ?? $index
+                    ]);
+                }
+            }
 
             ob_clean();
             echo json_encode(['status' => 'success', 'message' => 'Data tentang kami berhasil dibuat']);
@@ -76,9 +133,6 @@ try {
             $sql = "UPDATE tentang_kami SET
                         title          = ?,
                         description    = ?,
-                        image          = ?,
-                        video_url      = ?,
-                        video_file     = ?,
                         icon_type      = ?,
                         display_order  = ?,
                         is_active      = ?
@@ -87,14 +141,64 @@ try {
             $stmt->execute([
                 $data['title'],
                 $data['description']  ?? '',
-                $data['image']        ?? null,
-                $data['video_url']    ?? null,
-                $data['video_file']   ?? null,
                 $data['icon_type']    ?? null,
                 $data['display_order'] ?? 0,
                 $data['is_active']    ?? true,
                 $data['id']
             ]);
+
+            // Process media intelligently
+            if (!empty($data['media']) && is_array($data['media'])) {
+                // Collect IDs of submitted media items
+                $submittedMediaIds = [];
+                foreach ($data['media'] as $mediaItem) {
+                    if (!empty($mediaItem['id'])) {
+                        $submittedMediaIds[] = $mediaItem['id'];
+                    }
+                }
+
+                // Delete media items that are NOT in the submitted list (these are deleted items)
+                if (!empty($submittedMediaIds)) {
+                    $placeholders = implode(',', array_fill(0, count($submittedMediaIds), '?'));
+                    $deleteStmt = $pdo->prepare("DELETE FROM tentang_kami_media WHERE tentang_kami_id = ? AND id NOT IN ($placeholders)");
+                    $deleteStmt->execute(array_merge([$data['id']], $submittedMediaIds));
+                } else {
+                    // If no existing IDs submitted, delete all old media
+                    $deleteStmt = $pdo->prepare("DELETE FROM tentang_kami_media WHERE tentang_kami_id = ?");
+                    $deleteStmt->execute([$data['id']]);
+                }
+
+                // Now update/insert media items
+                $updateStmt = $pdo->prepare("UPDATE tentang_kami_media SET type = ?, url = ?, file = ?, display_order = ? WHERE id = ?");
+                $insertStmt = $pdo->prepare("INSERT INTO tentang_kami_media (id, tentang_kami_id, type, url, file, display_order) VALUES (?, ?, ?, ?, ?, ?)");
+
+                foreach ($data['media'] as $index => $mediaItem) {
+                    if (!empty($mediaItem['id'])) {
+                        // Update existing media
+                        $updateStmt->execute([
+                            $mediaItem['type'] ?? 'image',
+                            $mediaItem['url'] ?? null,
+                            $mediaItem['file'] ?? null,
+                            $mediaItem['display_order'] ?? $index,
+                            $mediaItem['id']
+                        ]);
+                    } else {
+                        // Insert new media
+                        $insertStmt->execute([
+                            uniqid('media_'),
+                            $data['id'],
+                            $mediaItem['type'] ?? 'image',
+                            $mediaItem['url'] ?? null,
+                            $mediaItem['file'] ?? null,
+                            $mediaItem['display_order'] ?? $index
+                        ]);
+                    }
+                }
+            } else {
+                // If no media submitted, delete all old media
+                $deleteStmt = $pdo->prepare("DELETE FROM tentang_kami_media WHERE tentang_kami_id = ?");
+                $deleteStmt->execute([$data['id']]);
+            }
 
             ob_clean();
             echo json_encode(['status' => 'success', 'message' => 'Data tentang kami berhasil diperbarui']);

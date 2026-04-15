@@ -142,6 +142,16 @@ export const tentangKamiAPI = {
       console.error('Error deleting tentang kami:', error);
       throw error;
     }
+  },
+
+  getById: async (id) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.tentangKami}?id=${id}`);
+      return await parseResponse(response);
+    } catch (error) {
+      console.error('Error fetching tentang kami detail:', error);
+      throw error;
+    }
   }
 };
 
