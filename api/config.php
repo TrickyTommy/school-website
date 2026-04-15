@@ -9,9 +9,9 @@ ini_set('display_errors', 1);
 
 // Database configuration
 $host = 'localhost';
-$dbname = 'sekolah_db';
-$username = 'root';
-$password = '';
+$dbname = 'u282680727_db_sekolah';
+$username = 'u282680727_smkbudimulia';
+$password = 'P4ssw0rd!web';
 $charset = 'utf8mb4';
 
 date_default_timezone_set('Asia/Jakarta');
