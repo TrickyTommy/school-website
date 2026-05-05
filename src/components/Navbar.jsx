@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
     import { Link, NavLink } from 'react-router-dom';
     import { motion } from 'framer-motion';
-    import { Menu, X, Sun, Moon, BookOpen, Users, Newspaper, Phone, ShieldCheck, Info, ChevronDown, Eye, Target, UserSquare, History, UserPlus } from 'lucide-react';
+    import { Menu, X, Sun, Moon, BookOpen, Users, Newspaper, Phone, ShieldCheck, Info, ChevronDown, Eye, Target, UserSquare, History, UserPlus, Download } from 'lucide-react';
     import { Button } from '@/components/ui/button';
     import { useTheme } from '@/components/ThemeProvider';
     import {
@@ -160,6 +160,17 @@ import React, { useState } from 'react';
                 </DropdownMenu>
 
                 <NavItem {...adminLink} />
+                
+                <a 
+                  href="https://smkbudimuliakrw.sch.id/portal_download/index.php" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ease-in-out flex items-center space-x-1 text-purple-100 hover:bg-purple-500 hover:text-white"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </a>
+                
                 <Button
                   variant="ghost"
                   size="icon"
@@ -214,6 +225,16 @@ import React, { useState } from 'react';
                 closeMenu={closeMobileMenu}
               />
               <MobileNavItem {...adminLink} onClick={closeMobileMenu} closeMenu={closeMobileMenu}/>
+              <a 
+                href="https://smkbudimuliakrw.sch.id/portal_download/index.php" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={closeMobileMenu}
+                className="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-300 ease-in-out flex items-center space-x-2 text-purple-100 hover:bg-purple-500 hover:text-white"
+              >
+                <Download className="h-5 w-5" />
+                <span>Download</span>
+              </a>
             </div>
           </motion.div>
         </nav>
